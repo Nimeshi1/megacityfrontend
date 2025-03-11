@@ -9,34 +9,28 @@ const MegaCityCabHome = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  const vehicles = [
+  // Information items for the new section
+  const infoItems = [
     {
-      
-      name: 'Standard Sedan',
-      capacity: '4 Passengers',
-      price: 'From $10/km',
-      description: 'Comfortable ride for small groups'
+      title: "Professional Drivers",
+      description: "All our drivers are professionally trained, licensed, and background-checked to ensure your safety and comfort.",
+      icon: "👨‍✈️"
     },
     {
-     
-      name: 'Premium SUV',
-      capacity: '6 Passengers',
-      price: 'From $15/km',
-      description: 'Spacious vehicle for family trips'
+      title: "Modern Fleet",
+      description: "Our vehicles are regularly maintained and equipped with the latest safety features for a smooth journey.",
+      icon: "🚗"
     },
     {
-      
-      name: 'Luxury Sedan',
-      capacity: '4 Passengers',
-      price: 'From $20/km',
-      description: 'Premium experience for business travel'
+      title: "Fixed Pricing",
+      description: "No hidden charges or surge pricing. Get transparent fare estimates before booking your ride.",
+      icon: "💰"
     },
     {
-      name: 'Mini Van',
-      capacity: '8 Passengers',
-      price: 'From $18/km',
-      description: 'Perfect for large groups'
-    },
+      title: "24/7 Support",
+      description: "Our customer service team is available round the clock to assist you with any queries or concerns.",
+      icon: "🛎️"
+    }
   ];
 
   const services = [
@@ -77,7 +71,7 @@ const MegaCityCabHome = () => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               <a href="#home" className="text-blue-950 hover:text-blue-800">Home</a>
-              <a href="#vehicles" className="text-blue-950 hover:text-blue-900">Our Vehicles</a>
+              <a href="/ourfleet" className="text-blue-950 hover:text-blue-900">Our Vehicles</a>
               <a href="#booking" className="text-blue-950 hover:text-blue-900">Book Now</a>
               <Link to="/about" className="text-blue-950 hover:text-blue-900">About Us</Link>
               <Link to="/help" className="text-blue-950 hover:text-blue-900">Help</Link>
@@ -108,7 +102,7 @@ const MegaCityCabHome = () => {
             <div className="md:hidden py-4">
               <div className="flex flex-col space-y-4">
                 <a href="#home" className="text-gray-700 hover:text-blue-900">Home</a>
-                <a href="#vehicles" className="text-gray-700 hover:text-blue-900">Our Vehicles</a>
+                <a href="/ourfleet" className="text-gray-700 hover:text-blue-900">Our Vehicles</a>
                 <a href="#booking" className="text-gray-700 hover:text-blue-900">Book Now</a>
                 <a href="#aboutus" className="text-gray-700 hover:text-blue-900">About Us</a>
                 <a href="/about" className="text-gray-700 hover:text-yellow-500">Help</a>
@@ -138,12 +132,11 @@ const MegaCityCabHome = () => {
                   Experience the comfort and reliability of Mega City Cab. We provide professional 
                   taxi services with trained drivers and modern vehicles for your safe journey.
                 </p>
-                <button 
-                  onClick={scrollToBooking}
+                  <Link to="/ourfleet"
                   className="bg-blue-950 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-800 transition-colors"
                 >
                   Book Now
-                </button>
+                </Link>
               </div>
 
               {/* Services List */}
@@ -190,35 +183,25 @@ const MegaCityCabHome = () => {
         </div>
       </section>
 
-      {/* Vehicles Section */}
-      <section id="vehicles" className="py-20">
+      {/* Information Section (replacing Vehicles Section) */}
+      <section id="information" className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Vehicles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {vehicles.map((vehicle, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="h-48 overflow-hidden">
-                  <img 
-                    src={V1}
-                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{vehicle.name}</h3>
-                  <div className="space-y-2">
-                    <p className="text-gray-600">👥 {vehicle.capacity}</p>
-                    <p className="text-gray-600">{vehicle.description}</p>
-                    <p className="text-blue-900 font-semibold">{vehicle.price}</p>
-                  </div>
-                  <button 
-                    onClick={scrollToBooking}
-                    className="mt-4 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition-colors"
-                  >
-                    Book Now
-                  </button>
-                </div>
+          <h2 className="text-3xl font-bold text-blue-950 text-center mb-12">Why Ride With Us</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {infoItems.map((item, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                <div className="text-4xl text-blue-900 mb-4">{item.icon}</div>
+                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
               </div>
             ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link to="/ourfleet"
+              className="bg-blue-900 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-800 transition-colors"
+            >
+              Book Your Ride Now
+            </Link>
           </div>
         </div>
       </section>
@@ -236,10 +219,11 @@ const MegaCityCabHome = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
-                <li><a href="#home" className="text-gray-300 hover:text-white">Home</a></li>
-                <li><a href="#vehicles" className="text-gray-300 hover:text-white">Our Vehicles</a></li>
+                <li><a href="/" className="text-gray-300 hover:text-white">Home</a></li>
+                <li><a href="/ourfleet" className="text-gray-300 hover:text-white">Our Vehicles</a></li>
                 <li><a href="#booking" className="text-gray-300 hover:text-white">Book Now</a></li>
                 <li><Link to="/about" className="text-gray-300 hover:text-white">About Us</Link></li>
+                <li><a href="/help" className="text-gray-300 hover:text-white">Help</a></li>
               </ul>
             </div>
             <div>

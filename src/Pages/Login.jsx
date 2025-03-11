@@ -1,50 +1,88 @@
 import React, { useState } from 'react';
+import { Lock, Mail } from "lucide-react";
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from "../Util/AuthContext";
 
 const HeaderNavbarHeroAuth = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showLogin, setShowLogin] = useState(true);
-
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  
   // Login form state
-  const [loginUsername, setLoginUsername] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-
-  // Signup form state
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [telephone, setTelephone] = useState('');
-  const [email, setEmail] = useState('');
-  const [signupUsername, setSignupUsername] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleLoginClick = () => {
-    setShowLogin(true);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(""); // Clear error when user starts typing
   };
 
-  const handleSignupClick = () => {
-    setShowLogin(false);
-  };
-
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login submitted:', { username: loginUsername, password: loginPassword });
-    // Add your authentication logic here
-  };
+    setIsLoading(true);
+    setError("");
 
-  const handleSignupSubmit = (e) => {
-    e.preventDefault();
-    console.log('Signup submitted:', {
-      name,
-      address,
-      telephone,
-      email,
-      username: signupUsername,
-      password: signupPassword
-    });
-    // Add your registration logic here
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/auth/login",
+        formData
+      );
+      
+      console.log("Login response:", response.data);
+      
+      const { token, userId, role } = response.data;
+      
+      localStorage.setItem("jwtToken", token);
+      localStorage.setItem("userId", userId);
+      localStorage.setItem("role", role);
+
+      login(token);
+
+      // Navigate based on role
+      switch (role) {
+        case "ROLE_ADMIN":
+          navigate("/AdminDash");
+          break;
+        case "ROLE_CUSTOMER":
+          navigate("/");
+          break;
+        case "ROLE_DRIVER":
+          navigate("/DriverDash");
+          break;
+        default:
+          setError("Invalid user role");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            setError("Invalid email or password");
+            break;
+          case 404:
+            setError("User not found");
+            break;
+          case 403:
+            setError("Account is locked. Please contact support");
+            break;
+          default:
+            setError("Login failed. Please try again later");
+        }
+      } else if (error.request) {
+        setError("Cannot connect to server. Please check your internet connection");
+      } else {
+        setError("An unexpected error occurred. Please try again");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -64,7 +102,6 @@ const HeaderNavbarHeroAuth = () => {
       <nav className="fixed top-8 left-0 right-0 z-40 bg-blue-100 shadow-lg">
         <div className="container mx-auto px-6">
           <div className="flex h-20 items-center">
-            {/* Logo - 25% width */}
             <div className="w-1/4">
               <div className="text-2xl font-bold text-yellow-500">
                 <span className="flex items-center">
@@ -73,7 +110,6 @@ const HeaderNavbarHeroAuth = () => {
               </div>
             </div>
 
-            {/* Desktop Navigation - 50% width, centered */}
             <div className="hidden md:flex flex-1 items-center justify-center space-x-12">
               <a href="/" className="text-gray-700 hover:text-yellow-500 transition duration-300">Home</a>
               <a href="/vehicles" className="text-gray-700 hover:text-yellow-500 transition duration-300">Our Vehicles</a>
@@ -83,9 +119,6 @@ const HeaderNavbarHeroAuth = () => {
               <a href="/drivers" className="text-gray-700 hover:text-yellow-500 transition duration-300">Driver</a>
             </div>
 
-            
-
-            {/* Mobile menu button */}
             <div className="md:hidden ml-auto">
               <button
                 onClick={toggleMenu}
@@ -102,7 +135,6 @@ const HeaderNavbarHeroAuth = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
           {isMenuOpen && (
             <div className="md:hidden pb-4">
               <div className="flex flex-col space-y-4">
@@ -112,10 +144,11 @@ const HeaderNavbarHeroAuth = () => {
                 <a href="/about" className="text-gray-700 hover:text-yellow-500">About Us</a>
                 <a href="/drivers" className="text-gray-700 hover:text-yellow-500">Driver</a>
                 <button 
-                  onClick={handleLoginClick}
+                  onClick={handleLoginSubmit}
                   className="bg-blue-900 text-white px-6 py-2 rounded-full hover:bg-yellow-600 transition duration-300 w-full"
+                  disabled={isLoading}
                 >
-                  Login
+                  {isLoading ? "Logging in..." : "Login"}
                 </button>
               </div>
             </div>
@@ -123,193 +156,83 @@ const HeaderNavbarHeroAuth = () => {
         </div>
       </nav>
 
-      {/* Spacer for fixed header */}
       <div className="h-28"></div>
 
-      {/* Hero Section with Auth Forms */}
+      {/* Hero Section with Login Form */}
       <div className="relative bg-yellow-500 min-h-screen">
-        {/* Hero Background */}
         <div className="absolute inset-0 bg-blue-950 bg-opacity-50">
           <div className="container mx-auto px-6 py-16">
             <div className="flex flex-col md:flex-row items-center justify-between">
-              {/* Hero Content - Left side */}
               <div className="text-white max-w-xl md:w-1/2 mb-12 md:mb-0">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">Your Trusted Ride Partner</h1>
+                <p className="text-5xl md:text-5xl font-bold mb-4">Mega City Cab Service</p>
+                <h1 className="text-3xl md:text-5xl font-bold mb-4">Your Trusted Ride Partner</h1>
                 <p className="text-xl">Providing safe and reliable transportation services since 2010. Book your ride today and experience the difference.</p>
               </div>
               
-              {/* Auth Forms - Right side */}
               <div className="md:w-5/12">
                 <div className="bg-white rounded-lg shadow-lg p-8">
-                  {showLogin ? (
-                    <>
-                      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
-                      
-                      <form onSubmit={handleLoginSubmit}>
-                        <div className="mb-4">
-                          <label htmlFor="login-username" className="block text-gray-700 text-sm font-bold mb-2">
-                            Username
-                          </label>
-                          <input
-                            id="login-username"
-                            type="text"
-                            value={loginUsername}
-                            onChange={(e) => setLoginUsername(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your username"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="mb-6">
-                          <label htmlFor="login-password" className="block text-gray-700 text-sm font-bold mb-2">
-                            Password
-                          </label>
-                          <input
-                            id="login-password"
-                            type="password"
-                            value={loginPassword}
-                            onChange={(e) => setLoginPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your password"
-                            required
-                          />
-                        </div>
-                        
-                        <button
-                          type="submit"
-                          className="w-full bg-blue-900 text-white py-2 px-4 rounded-full font-medium hover:bg-blue-800 transition-colors"
-                        >
-                          Sign In
-                        </button>
-                        
-                        <div className="mt-6 text-center">
-                          <p className="text-gray-600">Don't have an account?</p>
-                          <button 
-                            type="button"
-                            onClick={handleSignupClick}
-                            className="mt-2 w-full bg-yellow-500 text-white py-2 px-4 rounded-full font-medium hover:bg-yellow-600 transition-colors"
-                          >
-                            Sign Up
-                          </button>
-                        </div>
-                      </form>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Sign Up</h2>
-                      
-                      <form onSubmit={handleSignupSubmit}>
-                        <div className="mb-4">
-                          <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
-                            Full Name
-                          </label>
-                          <input
-                            id="name"
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your full name"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="mb-4">
-                          <label htmlFor="address" className="block text-gray-700 text-sm font-bold mb-2">
-                            Address
-                          </label>
-                          <input
-                            id="address"
-                            type="text"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your address"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="mb-4">
-                          <label htmlFor="telephone" className="block text-gray-700 text-sm font-bold mb-2">
-                            Telephone Number
-                          </label>
-                          <input
-                            id="telephone"
-                            type="tel"
-                            value={telephone}
-                            onChange={(e) => setTelephone(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your telephone number"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="mb-4">
-                          <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-                            Email
-                          </label>
-                          <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your email"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="mb-4">
-                          <label htmlFor="signup-username" className="block text-gray-700 text-sm font-bold mb-2">
-                            Username
-                          </label>
-                          <input
-                            id="signup-username"
-                            type="text"
-                            value={signupUsername}
-                            onChange={(e) => setSignupUsername(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Choose a username"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="mb-6">
-                          <label htmlFor="signup-password" className="block text-gray-700 text-sm font-bold mb-2">
-                            Password
-                          </label>
-                          <input
-                            id="signup-password"
-                            type="password"
-                            value={signupPassword}
-                            onChange={(e) => setSignupPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Choose a password"
-                            required
-                          />
-                        </div>
-                        
-                        <button
-                          type="submit"
-                          className="w-full bg-yellow-500 text-white py-2 px-4 rounded-full font-medium hover:bg-yellow-600 transition-colors"
+                  <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Sign In</h2>
+
+                  {error && (
+                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleLoginSubmit} className="space-y-4">
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Enter your email"
+                        required
+                        disabled={isLoading}
+                        className="w-full pl-10 pr-4 py-3 border rounded-md focus:border-emerald-500 focus:ring-emerald-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Enter your password"
+                        required
+                        disabled={isLoading}
+                        className="w-full pl-10 pr-4 py-3 border rounded-md focus:border-emerald-500 focus:ring-emerald-500 outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`w-full bg-yellow-500 text-white py-3 rounded-md font-semibold transition-all
+                        ${isLoading 
+                          ? 'opacity-70 cursor-not-allowed' 
+                          : 'hover:bg-yellow-600'}`}
+                    >
+                      {isLoading ? "Logging in..." : "Login"}
+                    </button>
+
+                    <div className="text-center text-sm text-gray-600 mt-4 space-y-2">
+                      <p>
+                        Don't have an account?{" "}
+                        <Link
+                          to="/SignUp"
+                          className="text-emerald-500 hover:underline"
                         >
                           Sign Up
-                        </button>
-                        
-                        <div className="mt-6 text-center">
-                          <p className="text-gray-600">Already have an account?</p>
-                          <button 
-                            type="button"
-                            onClick={handleLoginClick}
-                            className="mt-2 w-full bg-blue-900 text-white py-2 px-4 rounded-full font-medium hover:bg-blue-800 transition-colors"
-                          >
-                            Login
-                          </button>
-                        </div>
-                      </form>
-                    </>
-                  )}
+                        </Link>
+                      </p>
+                      
+                      
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>

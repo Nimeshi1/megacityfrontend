@@ -137,11 +137,13 @@ const HeaderNavbarHeroAuth = () => {
       <div className="relative bg-yellow-500 min-h-screen">
         {/* Hero Background */}
         <div className="absolute inset-0 bg-blue-950 bg-opacity-50">
-          <div className="container mx-auto px-6 py-16">
+          <div className="container mx-auto px-6 py-12">
             <div className="flex flex-col md:flex-row items-center justify-between">
               {/* Hero Content - Left side */}
               <div className="text-white max-w-xl md:w-1/2 mb-12 md:mb-0">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">Your Trusted Ride Partner</h1>
+                <p className="text-4xl md:text-5xl font-bold mb-4">Join Us as a Driver</p>
+                <p className="text-4xl md:text-5xl font-bold mb-4">Mega City Cab Service</p>
+                <h1 className="text-4xl md:text-3xl font-bold mb-4">Your Trusted Ride Partner</h1>
                 <p className="text-xl">Providing safe and reliable transportation services since 2010. Book your ride today and experience the difference.</p>
               </div>
               

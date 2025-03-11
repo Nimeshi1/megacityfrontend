@@ -8,83 +8,76 @@ const AboutUs = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen">
-      {/* Top Header - Fixed */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-blue-900 py-2">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-end space-x-4 text-sm text-white">
-            <a href="tel:1-800-CABRIDE" className="hover:text-gray-200">📞 1-800-CABRIDE</a>
-            <span>|</span>
-            <a href="mailto:info@cabservice.com" className="hover:text-gray-200">✉️ info@cabservice.com</a>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Navigation - Fixed */}
-      <nav className="fixed top-8 left-0 right-0 z-50 bg-blue-100 shadow-lg sticky">
-        <div className="container mx-auto px-6">
-          <div className="flex h-20 items-center">
-            {/* Logo - 25% width */}
-            <div className="w-1/4">
-              <div className="text-2xl font-bold text-yellow-500">
-                <span className="flex items-center">
-                  🚕 CabService
-                </span>
+      <div className="min-h-screen bg-white">
+          {/* Top Header */}
+          <div className="bg-blue-900 text-white py-2">
+            <div className="container mx-auto px-4 flex justify-between items-center">
+              <div className="flex items-center">
+                <span className="mr-2">📞</span>
+                <span>+94 11 2345678</span>
               </div>
-            </div>
-
-            {/* Desktop Navigation - 50% width, centered */}
-            <div className="hidden md:flex flex-1 items-center justify-center space-x-12">
-              <a href="/" className="text-gray-700 hover:text-yellow-500 transition duration-300">Home</a>
-              <a href="/vehicles" className="text-gray-700 hover:text-yellow-500 transition duration-300">Our Vehicles</a>
-              <a href="/booking" className="text-gray-700 hover:text-yellow-500 transition duration-300">Book a Ride</a>
-              <a href="/help" className="text-gray-700 hover:text-yellow-500 transition duration-300">Help</a>
-              <a href="/drivers" className="text-gray-700 hover:text-yellow-500 transition duration-300">Driver</a>
-            </div>
-
-            {/* Login Button - 25% width */}
-            <div className="hidden md:flex w-1/4 justify-end">
-              <Link to="/login" className="bg-blue-900 text-white px-6 py-2 rounded-full hover:bg-yellow-600 transition duration-300">
-                Login
-              </Link>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden ml-auto">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-700 hover:text-yellow-500"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {isMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
+              <div className="text-sm">Available 24/7</div>
             </div>
           </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="md:hidden pb-4">
-              <div className="flex flex-col space-y-4">
-                <a href="/" className="text-gray-700 hover:text-yellow-500">Home</a>
-                <a href="/vehicles" className="text-gray-700 hover:text-yellow-500">Our Vehicles</a>
-                <a href="/booking" className="text-gray-700 hover:text-yellow-500">Book a Ride</a>
-                <a href="/about" className="text-gray-700 hover:text-yellow-500">Help</a>
-                <a href="/about" className="text-gray-700 hover:text-yellow-500">Driver</a>
-                <button 
-                onClick={() => navigate('/login')} 
-                className="bg-yellow-500 text-white px-6 py-2 rounded-full hover:bg-yellow-600 transition duration-300 w-full">
-                  Login
-                </button>
+    
+          {/* Main Navigation */}
+          <nav className="bg-blue-100 shadow-lg sticky top-0 z-50">
+            <div className="container mx-auto px-4">
+              <div className="flex justify-between items-center h-16">
+                {/* Logo */}
+                <div className="flex-shrink-0 font-bold text-xl text-blue-900">
+                  MEGA CITY CAB
+                </div>
+    
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center space-x-8">
+                  <a href="/" className="text-blue-950 hover:text-blue-800">Home</a>
+                  <a href="/ourfleet" className="text-blue-950 hover:text-blue-900">Our Fleet</a>
+                  <a href="#booking" className="text-blue-950 hover:text-blue-900">Book Now</a>
+                  <Link to="/about" className="text-blue-950 hover:text-blue-900">About Us</Link>
+                  <Link to="/help" className="text-blue-950 hover:text-blue-900">Help</Link>
+                  <Link to="/drivers" className="text-blue-950 hover:text-blue-900">Driver</Link>
+                </div>
+    
+                {/* Desktop Login/Register */}
+                <div className="hidden md:flex items-center space-x-4">
+                  <Link to="/login" className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                           Login
+                        </Link> 
+                  
+                </div>
+    
+                {/* Mobile Menu Button */}
+                <div className="md:hidden">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="text-gray-700 hover:text-blue-900"
+                  >
+                    {isMenuOpen ? '✕' : '☰'}
+                  </button>
+                </div>
               </div>
+    
+              {/* Mobile Menu */}
+              {isMenuOpen && (
+                <div className="md:hidden py-4">
+                  <div className="flex flex-col space-y-4">
+                    <a href="/" className="text-gray-700 hover:text-blue-900">Home</a>
+                    <a href="/ourfleet" className="text-gray-700 hover:text-blue-900">Our Fleet</a>
+                    <a href="#booking" className="text-gray-700 hover:text-blue-900">Book Now</a>
+                    <a href="#aboutus" className="text-gray-700 hover:text-blue-900">About Us</a>
+                    <a href="/about" className="text-gray-700 hover:text-yellow-500">Help</a>
+                    <a href="/about" className="text-gray-700 hover:text-yellow-500">Driver</a>
+                    <button 
+                    onClick={() => navigate('/login')} 
+                    className="bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
+                      Login
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </nav>
+          </nav>
 
       {/* Spacer for fixed header */}
       <div className="h-8"></div>
@@ -94,9 +87,10 @@ const AboutUs = () => {
       {/* Hero Section */}
       <div className="relative bg-yellow-500 h-96">
         <div className="absolute inset-0 bg-blue-950 bg-opacity-50">
-          <div className="container mx-auto px-6 h-full flex items-center">
+          <div className="container mx-auto px-6 h-full flex items-center justify-center">
             <div className="text-white max-w-2xl">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">Your Trusted Ride Partner</h1>
+              <p className="text-4xl md:text-5xl font-bold mb-4">Mega city Cab Service</p>
+              <h1 className="text-4xl md:text-3xl font-bold mb-4">Your Trusted Ride Partner</h1>
               <p className="text-xl">Providing safe and reliable transportation services since 2010</p>
             </div>
           </div>
@@ -188,7 +182,7 @@ const AboutUs = () => {
               </svg>
               <div>
                 <h3 className="font-semibold">Phone</h3>
-                <p className="text-gray-600">1-800-CABRIDE</p>
+                <p className="text-gray-600">+94 11 2345678</p>
               </div>
             </div>
             
@@ -199,7 +193,7 @@ const AboutUs = () => {
               </svg>
               <div>
                 <h3 className="font-semibold">Email</h3>
-                <p className="text-gray-600">info@cabservice.com</p>
+                <p className="text-gray-600">megacity@cabservice.com</p>
               </div>
             </div>
             
@@ -210,7 +204,7 @@ const AboutUs = () => {
               </svg>
               <div>
                 <h3 className="font-semibold">Address</h3>
-                <p className="text-gray-600">123 Transport Street, City</p>
+                <p className="text-gray-600">123 Main St, Colombo</p>
               </div>
             </div>
           </div>
