@@ -45,79 +45,96 @@ const HelpPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-blue-900 py-2">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-end space-x-4 text-sm text-white">
-            <a href="tel:1-800-CABRIDE" className="hover:text-gray-200">📞 1-800-CABRIDE</a>
-            <span>|</span>
-            <a href="mailto:support@cabservice.com" className="hover:text-gray-200">✉️ support@cabservice.com</a>
-          </div>
+    <div className="min-h-screen bg-white">
+    {/* Top Header */}
+    <div className="bg-blue-900 text-white py-2">
+      <div className="container mx-auto px-4 flex justify-between items-center">
+        <div className="flex items-center">
+          <span className="mr-2">📞</span>
+          <span>+94 11 2345678</span>
         </div>
+        <div className="text-sm">Available 24/7</div>
       </div>
-
-      {/* Fixed Navigation */}
-      <nav className="fixed top-8 left-0 right-0 z-50 bg-blue-100 shadow-lg sticky">
-        <div className="container mx-auto px-6">
-          <div className="flex h-20 items-center">
-            {/* Logo */}
-            <div className="w-1/4">
-              <div className="text-2xl font-bold text-yellow-500">
-                <span className="flex items-center">
-                  🚕 CabService
-                </span>
+    </div>
+    
+    {/* Main Navigation */}
+    <nav className="bg-blue-100 shadow-lg sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0 font-bold text-xl text-blue-900">
+            MEGA CITY CAB
+          </div>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <a href="/" className="text-blue-950 hover:text-blue-800">Home</a>
+            <a href="/ourfleet" className="text-blue-950 hover:text-blue-900">Our Vehicles</a>
+            <a href="/booking" className="text-blue-950 hover:text-blue-900">Book Now</a>
+            <Link to="/about" className="text-blue-950 hover:text-blue-900">About Us</Link>
+            <Link to="/drivers" className="text-blue-950 hover:text-blue-900">Driver</Link>
+          </div>
+          
+          {/* Desktop Login/Register with Profile Icon */}
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-center">
+            <Link to="/customerprofile" className="cursor-pointer">
+              <div className="w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
               </div>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex flex-1 items-center justify-center space-x-12">
-              <a href="/" className="text-gray-700 hover:text-yellow-500">Home</a>
-              <a href="/vehicles" className="text-gray-700 hover:text-yellow-500">Our Vehicles</a>
-              <a href="/booking" className="text-gray-700 hover:text-yellow-500">Book a Ride</a>
-              <a href="/about" className="text-gray-700 hover:text-yellow-500">About Us</a>
-              <a href="/drivers" className="text-gray-700 hover:text-yellow-500">Driver</a>
-            </div>
-
-            {/* Login Button */}
-            <div className="hidden md:flex w-1/4 justify-end">
-               <Link to="/login"className="bg-blue-950 text-white px-6 py-2 rounded-full hover:bg-yellow-600">
+              </Link>
+              <Link to="/login" className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
                 Login
               </Link>
             </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden ml-auto">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-700">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {isMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
           </div>
-           {/* Mobile Navigation */}
-           {isMenuOpen && (
-            <div className="md:hidden pb-4">
-              <div className="flex flex-col space-y-4">
-                <a href="/" className="text-gray-700 hover:text-yellow-500">Home</a>
-                <a href="/vehicles" className="text-gray-700 hover:text-yellow-500">Our Vehicles</a>
-                <a href="/booking" className="text-gray-700 hover:text-yellow-500">Book a Ride</a>
-                <a href="/about" className="text-gray-700 hover:text-yellow-500">About Us</a>
-                <button 
-                onClick={() => navigate('/login')} 
-                className="bg-yellow-500 text-white px-6 py-2 rounded-full hover:bg-yellow-600 transition duration-300 w-full">
+          
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-gray-700 hover:text-blue-900"
+            >
+              {isMenuOpen ? '✕' : '☰'}
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4">
+            <div className="flex flex-col space-y-4">
+              <a href="/" className="text-gray-700 hover:text-blue-900">Home</a>
+              <a href="/ourfleet" className="text-gray-700 hover:text-blue-900">Our Vehicles</a>
+              <a href="/booking" className="text-gray-700 hover:text-blue-900">Book Now</a>
+              <a href="/about" className="text-gray-700 hover:text-blue-900">About Us</a>
+              <a href="/about" className="text-gray-700 hover:text-yellow-500">Driver</a>
+              
+              {/* Mobile Login with Profile Icon */}
+              <div className="flex items-center">
+              <Link to="/customerprofile" className="cursor-pointer">
+                <div className="w-6 h-6 rounded-full bg-blue-800 flex items-center justify-center text-white mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                </Link>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
+                >
                   Login
                 </button>
               </div>
             </div>
-          )}
-        </div>
-      </nav>
-
+          </div>
+        )}
+      </div>
+    </nav>
       {/* Spacer for fixed header */}
       <div className="h-28"></div>
 

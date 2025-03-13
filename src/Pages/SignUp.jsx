@@ -1,242 +1,372 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { User, Lock, Phone, Mail, ArrowRight, ChevronLeft, Shield, MapPin } from "lucide-react";
+import { motion } from "framer-motion";
 
+const ModernCarLogo = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="w-8 h-8"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+  >
+    <path d="M3,12 C3,12 3,14 3,15" />
+    <path d="M21,12 C21,12 21,14 21,15" />
+    <path
+      d="M4,10 C7,9 17,9 20,10 L19,14 C16,13 8,13 5,14 L4,10z"
+      strokeLinejoin="round"
+    />
+    <path d="M7,10 C9,7.5 15,7.5 17,10" strokeLinecap="round" />
+    <circle cx="7.5" cy="14" r="2" />
+    <circle cx="16.5" cy="14" r="2" />
+    <path d="M19,11.5 L18.5,13" strokeLinecap="round" />
+    <path d="M5,11.5 L5.5,13" strokeLinecap="round" />
+    <path d="M9.5,10.5 L14.5,10.5" strokeLinecap="round" strokeWidth="1" />
+  </svg>
+);
 
-const HeaderNavbarHeroAuth = () => {
+const SignUpPage = () => {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    password: "",
+    address: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // Signup form state
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [telephone, setTelephone] = useState('');
-  const [email, setEmail] = useState('');
-  const [signupUsername, setSignupUsername] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
-  const handleSignupSubmit = (e) => {
+  const handleTermsChange = (e) => {
+    setTermsAccepted(e.target.checked);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Signup submitted:', {
-      name,
-      address,
-      telephone,
-      email,
-      username: signupUsername,
-      password: signupPassword
-    });
-    
+    if (!termsAccepted) {
+      setError("You must agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const customerData = {
+        customerName: formData.fullName,
+        customerAddress: formData.address,
+        customerPhone: formData.phone,
+        email: formData.email,
+        password: formData.password,
+      };
+
+      const response = await fetch("http://localhost:8080/auth/customers/createCustomer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(customerData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create customer");
+      }
+
+      const result = await response.json();
+      console.log("Customer created successfully:", result);
+
+      setFormData({
+        fullName: "",
+        phone: "",
+        email: "",
+        password: "",
+        address: "",
+      });
+
+      alert("Customer created successfully!");
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      setError("Failed to create customer. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Top Header - Fixed */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-blue-900 py-2">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-end space-x-4 text-sm text-white">
-            <a href="tel:1-800-CABRIDE" className="hover:text-gray-200">📞 1-800-CABRIDE</a>
-            <span>|</span>
-            <a href="mailto:info@cabservice.com" className="hover:text-gray-200">✉️ info@cabservice.com</a>
+    <div className="min-h-screen bg-white">
+      {/* Top Header */}
+      <div className="bg-blue-900 text-white py-2">
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <span className="mr-2">📞</span>
+            <span>+94 11 2345678</span>
           </div>
+          <div className="text-sm">Available 24/7</div>
         </div>
       </div>
 
-      {/* Main Navigation - Fixed */}
-      <nav className="fixed top-8 left-0 right-0 z-40 bg-blue-100 shadow-lg">
-        <div className="container mx-auto px-6">
-          <div className="flex h-20 items-center">
-            {/* Logo - 25% width */}
-            <div className="w-1/4">
-              <div className="text-2xl font-bold text-yellow-500">
-                <span className="flex items-center">
-                  🚕 CabService
-                </span>
-              </div>
-            </div>
+      
+          
+       
 
-            {/* Desktop Navigation - 50% width, centered */}
-            <div className="hidden md:flex flex-1 items-center justify-center space-x-12">
-              <a href="/" className="text-gray-700 hover:text-yellow-500 transition duration-300">Home</a>
-              <a href="/vehicles" className="text-gray-700 hover:text-yellow-500 transition duration-300">Our Vehicles</a>
-              <a href="/booking" className="text-gray-700 hover:text-yellow-500 transition duration-300">Book a Ride</a>
-              <a href="/help" className="text-gray-700 hover:text-yellow-500 transition duration-300">Help</a>
-              <a href="/about" className="text-gray-700 hover:text-yellow-500 transition duration-300">About Us</a>
-              <a href="/drivers" className="text-gray-700 hover:text-yellow-500 transition duration-300">Driver</a>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden ml-auto">
-              <button
-                onClick={toggleMenu}
-                className="text-gray-700 hover:text-yellow-500"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {isMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
+      {/* Sign Up Container */}
+      <div className="relative min-h-screen flex items-center justify-center py-12">
+        {/* Background with Overlay */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-blue-950/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-blue-950/70 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-full">
+            <div className="absolute top-[15%] left-[25%] w-64 h-64 bg-lime-400/20 rounded-full filter blur-[120px] animate-pulse" />
+            <div className="absolute bottom-[10%] right-[20%] w-72 h-72 bg-lime-400/10 rounded-full filter blur-[150px] animate-pulse delay-700" />
           </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="md:hidden pb-4">
-              <div className="flex flex-col space-y-4">
-                <a href="/" className="text-gray-700 hover:text-yellow-500">Home</a>
-                <a href="/vehicles" className="text-gray-700 hover:text-yellow-500">Our Vehicles</a>
-                <a href="/booking" className="text-gray-700 hover:text-yellow-500">Book a Ride</a>
-                <a href="/about" className="text-gray-700 hover:text-yellow-500">About Us</a>
-                <a href="/drivers" className="text-gray-700 hover:text-yellow-500">Driver</a>
-              </div>
-            </div>
-          )}
         </div>
-      </nav>
 
-      {/* Spacer for fixed header */}
-      <div className="h-28"></div>
+        {/* Logo at Top Left */}
+        <div className="absolute top-8 left-8">
+          <h1 className="text-2xl font-bold">
+            <span className="text-white">MEGACITY</span>
+            <span className="text-blue-400"> CABS</span>
+          </h1>
+        </div>
 
-      {/* Hero Section with Signup Form */}
-      <div className="relative bg-yellow-500 min-h-screen">
-        {/* Hero Background */}
-        <div className="absolute inset-0 bg-blue-950 bg-opacity-50">
-          <div className="container mx-auto px-6 py-0">
-            <div className="flex flex-col md:flex-row items-center justify-between">
-              {/* Hero Content - Left side */}
-              <div className="text-white max-w-xl md:w-1/2 mb-12 md:mb-0">
-                <p className="text-4xl md:text-5xl font-bold mb-4">Mega City Cab Service</p>
-                <h1 className="text-4xl md:text-4xl font-bold mb-4">Your Trusted Ride Partner</h1>
-                <p className="text-xl">Providing safe and reliable transportation services since 2010. Book your ride today and experience the difference.</p>
-              </div>
-              
-              {/* Signup Form - Right side */}
-              <div className="md:w-5/12">
-                <div className="bg-white rounded-lg shadow-lg p-4">
-                  <h2 className="text-3xl font-bold text-center mb-4 text-gray-800 mt-2">Sign Up</h2>
-                  
-                  <form onSubmit={handleSignupSubmit}>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
-                        Full Name
-                      </label>
-                      <input
-                        id="name"
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter your full name"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="address" className="block text-gray-700 text-sm font-bold mb-2">
-                        Address
-                      </label>
-                      <input
-                        id="address"
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter your address"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="telephone" className="block text-gray-700 text-sm font-bold mb-2">
-                        Telephone Number
-                      </label>
-                      <input
-                        id="telephone"
-                        type="tel"
-                        value={telephone}
-                        onChange={(e) => setTelephone(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter your telephone number"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-                        Email
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter your email"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-4">
-                      <label htmlFor="signup-username" className="block text-gray-700 text-sm font-bold mb-2">
-                        Username
-                      </label>
-                      <input
-                        id="signup-username"
-                        type="text"
-                        value={signupUsername}
-                        onChange={(e) => setSignupUsername(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Choose a username"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mb-6">
-                      <label htmlFor="signup-password" className="block text-gray-700 text-sm font-bold mb-2">
-                        Password
-                      </label>
-                      <input
-                        id="signup-password"
-                        type="password"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Choose a password"
-                        required
-                      />
-                    </div>
-                    
-                    <button
-                      type="submit"
-                      className="w-full bg-yellow-500 text-white py-2 px-4 rounded-full font-medium hover:bg-yellow-600 transition-colors"
-                    >
-                      Sign Up
-                    </button>
+        {/* Sign Up Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative w-full max-w-md mx-auto px-8 py-10 bg-blue-900/40 backdrop-blur-lg rounded-2xl border border-blue-700/50 shadow-xl"
+        >
+          <div className="space-y-6">
+            {/* Sign Up Header */}
+            <div className="text-center space-y-2">
+              <h2 className="text-3xl font-bold text-white">Create Your Account</h2>
+              <p className="text-gray-400">Join MegaCity Cabs for premium rides</p>
+            </div>
 
-                    {/* Login Link with Increased Margin */}
-                    <div className="mt-8 text-center"> {/* Increased margin-top to mt-10 */}
-                      <p className="text-gray-600">Already have an account?{" "}
-                      <Link
-                         to="/login"
-                         className="text-emerald-500 hover:underline">
-                                                Login
-                                              </Link>
-                                              </p>
-                    </div>
-                  </form>
+            {/* Sign Up Form */}
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              {error && (
+                <div className="bg-red-900/50 text-red-200 p-2 rounded text-sm text-center">
+                  {error}
+                </div>
+              )}
+
+              {/* Full Name Field */}
+              <div className="space-y-1">
+                <label htmlFor="fullName" className="block text-white font-medium">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="fullName"
+                    name="fullName"
+                    type="text"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-transparent"
+                    placeholder="John Doe"
+                  />
                 </div>
               </div>
+
+              {/* Phone Number Field */}
+              <div className="space-y-1">
+                <label htmlFor="phone" className="block text-white font-medium">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-transparent"
+                    placeholder="+94 71 234 5678"
+                  />
+                </div>
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-1">
+                <label htmlFor="email" className="block text-white font-medium">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-transparent"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+
+              {/* Address Field */}
+              <div className="space-y-1">
+                <label htmlFor="address" className="block text-white font-medium">
+                  Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MapPin className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="address"
+                    name="address"
+                    type="text"
+                    value={formData.address}
+                    onChange={handleChange}
+                    required
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-transparent"
+                    placeholder="123 Main St, City"
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-1">
+                <label htmlFor="password" className="block text-white font-medium">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-transparent"
+                    placeholder="••••••••"
+                    minLength="8"
+                  />
+                </div>
+              </div>
+
+              {/* Terms and Conditions Checkbox */}
+              <div className="flex items-start">
+                <div className="flex items-center h-5">
+                  <input
+                    id="terms"
+                    name="terms"
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={handleTermsChange}
+                    required
+                    className="h-4 w-4 bg-gray-900 border-gray-700 rounded text-lime-400 focus:ring-lime-400"
+                  />
+                </div>
+                <div className="ml-3 text-sm">
+                  <label htmlFor="terms" className="text-gray-400">
+                    I agree to the{" "}
+                    <a href="#" className="text-lime-400 hover:text-lime-300">
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a href="#" className="text-lime-400 hover:text-lime-300">
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div>
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  disabled={isLoading}
+                  className="group w-full flex justify-center items-center py-3 px-4 bg-yellow-400 text-gray-900 font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-300 hover:drop-shadow-[0_0_12px_rgba(163,230,53,0.8)]"
+                >
+                  {isLoading ? (
+                    <svg
+                      className="animate-spin h-5 w-5 text-gray-900 mr-2"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </form>
+
+            {/* Login Link */}
+            <div className="text-center">
+              <p className="text-gray-400">
+                Already have an account?{" "}
+                <motion.a
+                  href="/login"
+                  whileHover={{ scale: 1.05 }}
+                  className="text-lime-400 font-medium hover:text-lime-300"
+                >
+                  Log in
+                </motion.a>
+              </p>
             </div>
+
+            {/* Back to Home */}
+            <motion.a
+              href="/"
+              whileHover={{ x: -3 }}
+              className="inline-flex items-center text-gray-400 hover:text-white transition-colors duration-300"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back to home
+            </motion.a>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
 };
 
-export default HeaderNavbarHeroAuth;
+export default SignUpPage;

@@ -47,77 +47,98 @@ const MegaCityCabHome = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Top Header */}
-      <div className="bg-blue-900 text-white py-2">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <span className="mr-2">📞</span>
-            <span>+94 11 2345678</span>
-          </div>
-          <div className="text-sm">Available 24/7</div>
-        </div>
-      </div>
-
-      {/* Main Navigation */}
-      <nav className="bg-blue-100 shadow-lg sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex-shrink-0 font-bold text-xl text-blue-900">
-              MEGA CITY CAB
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#home" className="text-blue-950 hover:text-blue-800">Home</a>
-              <a href="/ourfleet" className="text-blue-950 hover:text-blue-900">Our Vehicles</a>
-              <a href="#booking" className="text-blue-950 hover:text-blue-900">Book Now</a>
-              <Link to="/about" className="text-blue-950 hover:text-blue-900">About Us</Link>
-              <Link to="/help" className="text-blue-950 hover:text-blue-900">Help</Link>
-              <Link to="/drivers" className="text-blue-950 hover:text-blue-900">Driver</Link>
-            </div>
-
-            {/* Desktop Login/Register */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Link to="/login" className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
-                       Login
-                    </Link> 
-              
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-700 hover:text-blue-900"
-              >
-                {isMenuOpen ? '✕' : '☰'}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden py-4">
-              <div className="flex flex-col space-y-4">
-                <a href="#home" className="text-gray-700 hover:text-blue-900">Home</a>
-                <a href="/ourfleet" className="text-gray-700 hover:text-blue-900">Our Vehicles</a>
-                <a href="#booking" className="text-gray-700 hover:text-blue-900">Book Now</a>
-                <a href="#aboutus" className="text-gray-700 hover:text-blue-900">About Us</a>
-                <a href="/about" className="text-gray-700 hover:text-yellow-500">Help</a>
-                <a href="/about" className="text-gray-700 hover:text-yellow-500">Driver</a>
-                <button 
-                onClick={() => navigate('/login')} 
-                className="bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
-                  Login
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-
+   <div className="min-h-screen bg-white">
+       {/* Top Header */}
+       <div className="bg-blue-900 text-white py-2">
+         <div className="container mx-auto px-4 flex justify-between items-center">
+           <div className="flex items-center">
+             <span className="mr-2">📞</span>
+             <span>+94 11 2345678</span>
+           </div>
+           <div className="text-sm">Available 24/7</div>
+         </div>
+       </div>
+       
+       {/* Main Navigation */}
+       <nav className="bg-blue-100 shadow-lg sticky top-0 z-50">
+         <div className="container mx-auto px-4">
+           <div className="flex justify-between items-center h-16">
+             {/* Logo */}
+             <div className="flex-shrink-0 font-bold text-xl text-blue-900">
+               MEGA CITY CAB
+             </div>
+             
+             {/* Desktop Navigation */}
+             <div className="hidden md:flex items-center space-x-8">
+               <a href="/" className="text-blue-950 hover:text-blue-800">Home</a>
+               <a href="/ourfleet" className="text-blue-950 hover:text-blue-900">Our Vehicles</a>
+               <a href="/booking" className="text-blue-950 hover:text-blue-900">Book Now</a>
+               <Link to="/about" className="text-blue-950 hover:text-blue-900">About Us</Link>
+               <a href="/help" className="text-blue-950 hover:text-blue-900">Help</a>
+               <Link to="/drivers" className="text-blue-950 hover:text-blue-900">Driver</Link>
+             </div>
+             
+             {/* Desktop Login/Register with Profile Icon */}
+             <div className="hidden md:flex items-center space-x-4">
+               <div className="flex items-center">
+               <Link to="/customerprofile" className="cursor-pointer">
+                 <div className="w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white mr-2">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                     <circle cx="12" cy="7" r="4"></circle>
+                   </svg>
+                 </div>
+                 </Link>
+                 <Link to="/login" className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                   Login
+                 </Link>
+               </div>
+             </div>
+             
+             {/* Mobile Menu Button */}
+             <div className="md:hidden">
+               <button
+                 onClick={() => setIsMenuOpen(!isMenuOpen)}
+                 className="text-gray-700 hover:text-blue-900"
+               >
+                 {isMenuOpen ? '✕' : '☰'}
+               </button>
+             </div>
+           </div>
+           
+           {/* Mobile Menu */}
+           {isMenuOpen && (
+             <div className="md:hidden py-4">
+               <div className="flex flex-col space-y-4">
+                 <a href="/" className="text-gray-700 hover:text-blue-900">Home</a>
+                 <a href="/ourfleet" className="text-gray-700 hover:text-blue-900">Our Vehicles</a>
+                 <a href="/booking" className="text-gray-700 hover:text-blue-900">Book Now</a>
+                 <a href="/about" className="text-gray-700 hover:text-blue-900">About Us</a>
+                 <a href="/help" className="text-blue-950 hover:text-blue-900">Help</a>
+                 <a href="/about" className="text-gray-700 hover:text-yellow-500">Driver</a>
+                 
+                 {/* Mobile Login with Profile Icon */}
+                 <div className="flex items-center">
+                 <Link to="/customerprofile" className="cursor-pointer">
+                   <div className="w-6 h-6 rounded-full bg-blue-800 flex items-center justify-center text-white mr-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                       <circle cx="12" cy="7" r="4"></circle>
+                     </svg>
+                   </div>
+                   </Link>
+                   <button
+                     onClick={() => navigate('/login')}
+                     className="bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
+                   >
+                     Login
+                   </button>
+                 </div>
+               </div>
+             </div>
+           )}
+         </div>
+       </nav>
       {/* Hero Section */}
       <section id="home" className="bg-gray-100 py-20">
         <div className="container mx-auto px-4">

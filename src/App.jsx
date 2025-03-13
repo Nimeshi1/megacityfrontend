@@ -10,7 +10,10 @@ import Ourfleet from "./Pages/Ourfleet.jsx";
 import "./index.css";
 import { AuthProvider } from "./Util/AuthContext.jsx";
 
-import AdminDash from "./Pages/AdminDashBoard/AdminDash.jsx";
+import AdminRoutes from "./Pages/AdminPanel/AdminRoutes.jsx";
+import Booking from "./Pages/Booking.jsx";
+import Customerprofile from "./Pages/Customerprofile.jsx";
+import DriverProfile from "./Pages/Driverprofile.jsx";
 
 function App() {
   return (
@@ -25,8 +28,11 @@ function App() {
             <Route path="/SignUp" element={<SignUp />} />
             <Route path="/drivers" element={<Drivers />} />
             <Route path="/ourfleet" element={<Ourfleet />} />
-            <Route path="/AdminDash" element={<AdminDash />} />
-           </Routes>
+            <Route path='/admin/*' element={<AdminRoutes/>}/>
+            <Route path="/booking" element={<Booking />}/>
+            <Route path="/customerprofile" element={<Customerprofile/>}/>
+            <Route path="/driverprofile" element={<DriverProfile/>}/>
+                         </Routes>
         </div>
       </AuthProvider>
     </BrowserRouter>
