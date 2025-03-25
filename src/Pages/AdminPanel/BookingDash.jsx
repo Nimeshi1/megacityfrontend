@@ -91,7 +91,7 @@ const AdminBookings = () => {
             <thead>
               <tr className="bg-gray-700 text-gray-400">
                 <th className="p-4">Booking ID</th>
-                <th className="p-4">Customer</th>
+                <th className="p-4">Customer ID</th>
                 <th className="p-4">Date</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Amount</th>
@@ -101,11 +101,7 @@ const AdminBookings = () => {
               {bookings.map((booking) => (
                 <tr key={booking.bookingId} className="border-t border-gray-700 text-white">
                   <td className="p-4">{booking.bookingId}</td>
-                  <td className="p-4">
-                    {booking.customer 
-                      ? `${booking.customer.name}`
-                      : 'Unknown Customer'}
-                  </td>
+                  <td className="p-4">{booking.customerId}</td> {/* Display customerId directly */}
                   <td className="p-4">
                     {new Date(booking.bookingDate).toLocaleDateString()}
                   </td>
@@ -118,7 +114,7 @@ const AdminBookings = () => {
                       {booking.status}
                     </span>
                   </td>
-                  <td className="p-4">Rs.{booking.amount?.toFixed(2)}</td>
+                  <td className="p-4">LKR{booking.amount?.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

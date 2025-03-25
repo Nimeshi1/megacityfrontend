@@ -242,7 +242,7 @@ const MegaCityCabHome = () => {
               <ul className="space-y-2">
                 <li><a href="/" className="text-gray-300 hover:text-white">Home</a></li>
                 <li><a href="/ourfleet" className="text-gray-300 hover:text-white">Our Vehicles</a></li>
-                <li><a href="#booking" className="text-gray-300 hover:text-white">Book Now</a></li>
+                <li><a href="/booking" className="text-gray-300 hover:text-white">Book Now</a></li>
                 <li><Link to="/about" className="text-gray-300 hover:text-white">About Us</Link></li>
                 <li><a href="/help" className="text-gray-300 hover:text-white">Help</a></li>
               </ul>

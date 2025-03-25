@@ -1,108 +1,360 @@
-import { cloneElement } from "react";
-import {
-  CalendarCheckIcon,
-  ClockIcon,
-  MapPinIcon,
-  PhoneIcon,
-  MailIcon,
-  StarIcon,
-  DollarSignIcon,
-  UserIcon,
-  ChevronRightIcon,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { useAuth } from "../Util/AuthContext"; // Adjust the import path based on your file structure
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { CalendarIcon, ClockIcon, MapPinIcon, TrashIcon, AlertCircleIcon, UserIcon, PhoneIcon, MailIcon, SaveIcon, CreditCardIcon, IdCardIcon } from 'lucide-react';
+import axios from 'axios';
+import { useAuth } from '../Util/AuthContext';
 
-const CustomerProfile = () => {
-  const [customer, setCustomer] = useState(null);
-  const [bookingHistory, setBookingHistory] = useState([]);
+// API Base URL
+const API_BASE_URL = 'http://localhost:8080';
+
+// Customer API Service
+const customerAPI = {
+  baseURL: `${API_BASE_URL}/auth/customers`,
+
+  getCustomer: async (id) => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) throw new Error('No authentication token found. Please log in.');
+    try {
+      const response = await axios.get(`${customerAPI.baseURL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching customer:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  updateCustomer: async (id, data) => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) throw new Error('No authentication token found. Please log in.');
+    try {
+      const response = await axios.put(`${customerAPI.baseURL}/updateCustomer/${id}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating customer:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  getBookings: async () => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) throw new Error('No authentication token found. Please log in.');
+    try {
+      const response = await axios.get(`${API_BASE_URL}/auth/bookings/getallcustomerbookings`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('Raw bookings response:', response.data); // Debug raw data
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching bookings:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  cancelBooking: async (bookingId, reason) => {
+    const token = localStorage.getItem('jwtToken');
+    console.log('Cancel Booking - Token:', token);
+    console.log('Cancel Booking - Booking ID:', bookingId);
+    console.log('Cancel Booking - Payload:', { cancellationReason: reason });
+    if (!token) throw new Error('No authentication token found. Please log in.');
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/bookings/${bookingId}/cancel`,
+        { cancellationReason: reason },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      console.log('Cancel Booking - Success Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error canceling booking:', error.response?.data?.message || error.message);
+      throw error;
+    }
+  },
+};
+
+// BookingsSection
+const BookingsSection = () => {
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const { user } = useAuth(); // Get the authenticated user from context
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [bookingToDelete, setBookingToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchCustomerData = async () => {
-      if (!user || !user.userId) {
-        setError("Please log in to view your profile");
+    const fetchBookings = async () => {
+      if (!user?.userId) {
         setLoading(false);
+        setError('Please log in to view bookings.');
         return;
       }
 
       try {
         setLoading(true);
+        setError(null);
+        const bookingsData = await customerAPI.getBookings();
 
-        // Fetch customer data
-        const customerResponse = await axios.get(
-          `http://localhost:8080/auth/customer${user.userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-            },
-          }
-        );
-        const customerData = customerResponse.data;
+        const transformedBookings = bookingsData.map(booking => {
+          const price = booking.totalAmount != null ? `LKR${(booking.totalAmount).toFixed(2)}` : 'LKR0.00';
+          console.log(`Booking ID: ${booking.bookingId}, Total Amount: ${booking.totalAmount}, Price: ${price}`);
+          return {
+            id: booking.bookingId,
+            status: booking.status === 'COMPLETED' ? 'Completed' :
+                    booking.status === 'CANCELLED' ? 'Cancelled' : 'Upcoming',
+            date: booking.bookingDate,
+            time: booking.pickupTime,
+            pickup: booking.pickupLocation,
+            destination: booking.destination,
+            driver: booking.driverDetails?.driverName || 'Not assigned',
+            carModel: booking.driverDetails?.vehicleModel || 'Not assigned',
+            price: price,
+          };
+        });
 
-        // Fetch profile image
-        const imageResponse = await axios.get(
-          `http://localhost:8080/auth/customer${user.userId}/profileImage`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-            },
-          }
-        );
-
-        // Fetch booking history
-        const bookingsResponse = await axios.get(
-          `http://localhost:8080/auth/bookings/getallbookings`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("jwtToken")}`,
-            },
-          }
-        );
-
-        const customerProfile = {
-          id: customerData.customerId,
-          name: customerData.name,
-          email: customerData.email,
-          phone: customerData.phone,
-          address: customerData.address,
-          avatar: imageResponse.data || `https://ui-avatars.com/api/?name=${customerData.name}&background=0A0A0A&color=fff&size=128`,
-          stats: {
-            totalTrips: bookingsResponse.data.length, // Real data from backend
-            totalSpent: bookingsResponse.data
-              .reduce((sum, booking) => sum + parseFloat(booking.totalAmount || 0), 0)
-              .toFixed(2), // Use totalAmount from Booking model
-            avgRating: bookingsResponse.data.length > 0
-              ? (bookingsResponse.data.reduce((sum, booking) => sum + (booking.passengerRating || 0), 0) / bookingsResponse.data.length).toFixed(1)
-              : 0, // Use passengerRating from Booking model
-            lastRide: bookingsResponse.data.length > 0
-              ? new Date(bookingsResponse.data[0].pickupDate).toLocaleDateString() // Use pickupDate
-              : "N/A",
-          },
-        };
-
-        setCustomer(customerProfile);
-
-        // Map booking history from response using fields from the Booking model
-        setBookingHistory(bookingsResponse.data.map(booking => ({
-          id: booking.bookingId,
-          date: booking.pickupDate ? new Date(booking.pickupDate).toLocaleDateString() : "N/A", // Use pickupDate
-          from: booking.pickupLocation || "Unknown", // Use pickupLocation
-          to: booking.destination || "Unknown", // Use destination
-          amount: `$${parseFloat(booking.totalAmount || 0).toFixed(2)}`, // Use totalAmount
-          status: booking.status || "Unknown", // Use status
-          driver: booking.driverId ? "Assigned" : "N/A", // Use driverId to indicate assignment
-          rating: booking.passengerRating || null, // Use passengerRating
-        })));
-
+        setBookings(transformedBookings);
       } catch (err) {
-        setError("Failed to load customer data: " + (err.response?.data || err.message));
-        console.error(err);
+        setError(err.response?.data?.message || err.message || 'Failed to load bookings.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [user]);
+
+  const handleDeleteClick = (booking) => {
+    setBookingToDelete(booking);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async (reason) => {
+    if (!bookingToDelete?.id || !reason) return;
+
+    try {
+      setIsCancelling(true);
+      setError(null);
+      await customerAPI.cancelBooking(bookingToDelete.id, reason);
+      setBookings(prev => prev.filter(b => b.id !== bookingToDelete.id));
+      setSuccessMessage('Booking cancelled successfully!');
+      setTimeout(() => setSuccessMessage(null), 5000);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to cancel booking.';
+      setError(errorMessage);
+      console.error('Cancellation error details:', err.response || err);
+    } finally {
+      setIsCancelling(false);
+      setShowDeleteModal(false);
+      setBookingToDelete(null);
+    }
+  };
+
+  return (
+    <div className="bg-blue-950 text-blue-950 min-h-[calc(100vh-200px)] p-6">
+      <h2 className="text-2xl font-bold mb-6 text-blue-200">My Bookings</h2>
+      {successMessage && (
+        <div className="bg-green-900/50 border border-green-700 text-green-200 px-4 py-3 rounded mb-4">
+          {successMessage}
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+      {loading && (
+        <div className="text-center py-8 text-blue-200">Loading bookings...</div>
+      )}
+      {!loading && bookings.length > 0 ? (
+        bookings.map(booking => (
+          <BookingCard key={booking.id} booking={booking} onDelete={handleDeleteClick} />
+        ))
+      ) : (
+        !loading && (
+          <div className="bg-blue-900/50 rounded-lg p-6 text-center text-blue-200">
+            <p>No bookings found.</p>
+          </div>
+        )
+      )}
+      {showDeleteModal && (
+        <DeleteConfirmationModal
+          onCancel={() => {
+            setShowDeleteModal(false);
+            setBookingToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+          isSubmitting={isCancelling}
+        />
+      )}
+    </div>
+  );
+};
+
+// BookingCard
+const BookingCard = ({ booking, onDelete }) => (
+  <div className="mb-4 bg-blue-900/50 rounded-lg p-6 border border-blue-800">
+    <div className="flex justify-between items-start">
+      <div className="flex flex-col">
+        <div className={`inline-flex px-3 py-1 rounded-full text-sm mb-4 ${
+          booking.status === 'Upcoming' ? 'bg-blue-600 text-white' : 'bg-blue-800 text-blue-200'
+        }`}>
+          {booking.status}
+        </div>
+        <div className="flex items-center mb-2">
+          <CalendarIcon size={16} className="mr-2 text-blue-400" />
+          <span className="mr-4">{booking.date}</span>
+          <ClockIcon size={16} className="mr-2 text-blue-400" />
+          <span>{booking.time}</span>
+        </div>
+        <div className="flex items-center mb-2 text-blue-400">
+          <div className="w-2 h-2 rounded-full bg-blue-400 mr-2"></div>
+          <span>{booking.pickup}</span>
+        </div>
+        <div className="flex items-center mb-4 text-blue-400">
+          <MapPinIcon size={16} className="mr-2" />
+          <span>{booking.destination}</span>
+        </div>
+        <div className="text-blue-300 text-sm">
+          Driver: {booking.driver} • {booking.carModel}
+        </div>
+      </div>
+      <div className="text-right flex flex-col items-end">
+        <div className="text-2xl font-bold text-blue-400 mb-2">
+          {booking.price || '$0.00'}
+        </div>
+        {booking.status === 'Upcoming' && (
+          <button
+            className="px-3 py-1 bg-red-600/80 text-white rounded-md text-sm flex items-center hover:bg-red-700"
+            onClick={() => onDelete(booking)}
+          >
+            <TrashIcon size={16} className="mr-1" />
+            Cancel
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
+// DeleteConfirmationModal
+const DeleteConfirmationModal = ({ onCancel, onConfirm, isSubmitting }) => {
+  const [reason, setReason] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!reason) return;
+    await onConfirm(reason);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <form onSubmit={handleSubmit} className="bg-blue-900 rounded-lg p-6 max-w-md w-full text-white">
+        <div className="flex items-center mb-4">
+          <AlertCircleIcon className="text-red-500 mr-2" size={24} />
+          <h3 className="text-xl font-bold text-blue-200">Confirm Cancellation</h3>
+        </div>
+        <p className="mb-4 text-blue-300">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+        <div className="mb-4">
+          <label className="block text-blue-200 mb-2" htmlFor="reason">Reason for cancellation</label>
+          <textarea
+            id="reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full bg-blue-800 border border-blue-700 text-white rounded-lg p-2 focus:ring-blue-400 focus:border-blue-400"
+            rows="3"
+            required
+            disabled={isSubmitting}
+          />
+        </div>
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 bg-blue-800 rounded-md text-blue-200 hover:bg-blue-700 disabled:opacity-50"
+            disabled={isSubmitting}
+          >
+            Go Back
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-red-600 text-white rounded-md flex items-center justify-center min-w-[150px] hover:bg-red-700 disabled:opacity-50"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : 'Confirm Cancellation'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// ProfileSection (Restored)
+const ProfileSection = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const [profile, setProfile] = useState({
+    customerId: '',
+    customerNic: '',
+    customerName: '',
+    customerAddress: '',
+    email: '',
+    customerPhone: '',
+    memberSince: '',
+    preferredPayment: '',
+  });
+  const [formData, setFormData] = useState({ ...profile });
+
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      if (!user?.userId) {
+        setError('Please log in to view your profile.');
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const data = await customerAPI.getCustomer(user.userId);
+        const profileData = {
+          customerId: data.customerId,
+          customerNic: data.customerNic,
+          customerName: data.customerName,
+          customerAddress: data.customerAddress,
+          email: data.email,
+          customerPhone: data.customerPhone,
+          memberSince: data.memberSince || 'January 2022',
+          preferredPayment: data.preferredPayment || 'Credit Card',
+        };
+        setProfile(profileData);
+        setFormData(profileData);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message || 'Failed to load profile data.');
       } finally {
         setLoading(false);
       }
@@ -111,200 +363,346 @@ const CustomerProfile = () => {
     fetchCustomerData();
   }, [user]);
 
-  if (!user) {
-    return <div className="text-center p-8 text-red-600">Please log in to view your profile</div>;
-  }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const customerData = {
+        customerId: formData.customerId,
+        customerNic: formData.customerNic,
+        customerName: formData.customerName,
+        customerAddress: formData.customerAddress,
+        email: formData.email,
+        customerPhone: formData.customerPhone,
+      };
+      await customerAPI.updateCustomer(formData.customerId, customerData);
+      setProfile(prev => ({ ...prev, ...formData }));
+      setIsEditing(false);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to update profile.');
+    }
+  };
 
   if (loading) {
-    return <div className="text-center p-8">Loading...</div>;
+    return <div className="flex justify-center items-center p-8 text-blue-200">Loading profile...</div>;
   }
 
-  if (error || !customer) {
-    return <div className="text-center p-8 text-red-600">{error || "Customer not found"}</div>;
+  if (error) {
+    return (
+      <div className="bg-red-900/50 text-red-200 p-4 rounded-lg">
+        <p>{error}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto p-6 space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <UserIcon className="w-6 h-6 text-yellow-600" />
-          Customer Profile
-        </h1>
-        <div className="flex gap-3">
-          <Link to="/editProfile">
-            <button className="px-4 py-2 bg-yellow-600 text-white hover:bg-yellow-700 transition-colors rounded-lg text-sm font-medium shadow-md">
-              Edit Profile
-            </button>
-          </Link>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 text-gray-900 border border-yellow-200 shadow-xl">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-2xl blur-xl opacity-30"></div>
-            <img
-              src={customer.avatar}
-              alt={customer.name}
-              className="relative w-28 h-28 rounded-2xl border-4 border-yellow-500/50 object-cover shadow-lg"
-            />
-            <div className="absolute -bottom-2 -right-2 bg-yellow-500 w-6 h-6 rounded-full border-3 border-gray-100 shadow"></div>
-          </div>
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {customer.name}
-                </h1>
-                <p className="text-gray-600 text-sm mt-1 font-medium">
-                  Customer ID: {customer.id}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              {[
-                { icon: <MailIcon />, label: "Email", value: customer.email },
-                { icon: <PhoneIcon />, label: "Phone", value: customer.phone },
-                { icon: <MapPinIcon />, label: "Address", value: customer.address },
-                { icon: <ClockIcon />, label: "Last Activity", value: customer.stats.lastRide },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-500 rounded-lg border border-yellow-600 shadow-sm">
-                    {cloneElement(item.icon, { className: "w-5 h-5 text-white" })}
-                  </div>
-                  <div>
-                    <p className="text-gray-600 text-xs font-medium">{item.label}</p>
-                    <p className="text-gray-900 text-sm font-semibold">
-                      {item.value}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {[
-          { title: "Total Trips", value: customer.stats.totalTrips, icon: <CalendarCheckIcon /> },
-          { title: "Total Spent", value: `$${customer.stats.totalSpent}`, icon: <DollarSignIcon /> },
-        ].map((stat, index) => (
-          <div
-            key={index}
-            className="bg-gradient-to-br from-gray-50 to-yellow-50 rounded-2xl p-6 border border-yellow-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-blue-200">Personal Information</h2>
+        {!isEditing && (
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700"
+            onClick={() => setIsEditing(true)}
           >
-            <div className="flex items-center justify-between">
-              <p className="text-gray-600 text-xs uppercase tracking-wider font-medium">
-                {stat.title}
-              </p>
-              <div className="p-2 bg-yellow-500 rounded-lg border border-yellow-600 shadow-sm">
-                {cloneElement(stat.icon, { className: "w-5 h-5 text-white" })}
+            Edit Profile
+          </button>
+        )}
+      </div>
+      {!isEditing ? (
+        <div className="bg-blue-900/50 rounded-lg p-6">
+          <div className="flex items-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-2xl mr-4">
+              {profile.customerName?.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div>
+              <h3 className="text-2xl text-blue-200">{profile.customerName}</h3>
+              <p className="text-blue-300">Member since {profile.memberSince}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <div className="mb-4">
+                <label className="block text-blue-300 mb-1">Email</label>
+                <div className="flex items-center text-blue-400">
+                  <MailIcon size={18} className="mr-2" />
+                  <span>{profile.email}</span>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-blue-300 mb-1">Address</label>
+                <div className="flex items-center text-blue-400">
+                  <MapPinIcon size={18} className="mr-2" />
+                  <span>{profile.customerAddress}</span>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-blue-300 mb-1">NIC</label>
+                <div className="flex items-center text-blue-400">
+                  <IdCardIcon size={18} className="mr-2" />
+                  <span>{profile.customerNic}</span>
+                </div>
               </div>
             </div>
-            <p className="text-2xl font-bold mt-3 text-gray-900">
-              {stat.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-gradient-to-br from-gray-50 to-yellow-50 rounded-2xl p-6 border border-yellow-200 shadow-xl">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-500 rounded-lg border border-yellow-600 shadow-sm">
-              <CalendarCheckIcon className="w-5 h-5 text-white" />
+            <div>
+              <div className="mb-4">
+                <label className="block text-blue-300 mb-1">Phone</label>
+                <div className="flex items-center text-blue-400">
+                  <PhoneIcon size={18} className="mr-2" />
+                  <span>{profile.customerPhone}</span>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-blue-300 mb-1">Preferred Payment</label>
+                <div className="flex items-center text-blue-400">
+                  <CreditCardIcon size={18} className="mr-2" />
+                  <span>{profile.preferredPayment}</span>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-blue-300 mb-1">Customer ID</label>
+                <div className="flex items-center text-blue-400">
+                  <UserIcon size={18} className="mr-2" />
+                  <span>{profile.customerId}</span>
+                </div>
+              </div>
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Booking History
-            </h2>
           </div>
-          <button className="text-sm text-yellow-700 hover:text-yellow-800 font-semibold transition-colors flex items-center gap-1">
-            View all <ChevronRightIcon className="w-4 h-4" />
-          </button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-gray-600 text-xs uppercase tracking-wider border-b border-yellow-200">
-                <th className="text-left pb-4 font-semibold">Booking ID</th>
-                <th className="text-left pb-4 font-semibold">Date</th>
-                <th className="text-left pb-4 font-semibold">From</th>
-                <th className="text-left pb-4 font-semibold">To</th>
-                <th className="text-left pb-4 font-semibold">Driver</th>
-                <th className="text-left pb-4 font-semibold">Status</th>
-                <th className="text-left pb-4 font-semibold">Rating</th>
-                <th className="text-right pb-4 font-semibold">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookingHistory.map((booking) => (
-                <tr
-                  key={booking.id}
-                  className="border-b border-yellow-100 hover:bg-yellow-50/50 transition-colors"
+      ) : (
+        <form onSubmit={handleSubmit} className="bg-blue-900/50 rounded-lg p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-blue-300 mb-1" htmlFor="customerName">Full Name</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <UserIcon size={18} className="text-blue-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="customerName"
+                    name="customerName"
+                    value={formData.customerName}
+                    onChange={handleChange}
+                    className="bg-blue-800 border border-blue-700 text-white rounded-lg focus:ring-blue-400 focus:border-blue-400 block w-full pl-10 p-2.5"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-blue-300 mb-1" htmlFor="email">Email Address</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <MailIcon size={18} className="text-blue-400" />
+                  </div>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="bg-blue-800 border border-blue-700 text-white rounded-lg focus:ring-blue-400 focus:border-blue-400 block w-full pl-10 p-2.5"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-blue-300 mb-1" htmlFor="customerPhone">Phone Number</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <PhoneIcon size={18} className="text-blue-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="customerPhone"
+                    name="customerPhone"
+                    value={formData.customerPhone}
+                    onChange={handleChange}
+                    className="bg-blue-800 border border-blue-700 text-white rounded-lg focus:ring-blue-400 focus:border-blue-400 block w-full pl-10 p-2.5"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-blue-300 mb-1" htmlFor="customerAddress">Address</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <MapPinIcon size={18} className="text-blue-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="customerAddress"
+                    name="customerAddress"
+                    value={formData.customerAddress}
+                    onChange={handleChange}
+                    className="bg-blue-800 border border-blue-700 text-white rounded-lg focus:ring-blue-400 focus:border-blue-400 block w-full pl-10 p-2.5"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-blue-300 mb-1" htmlFor="customerNic">NIC Number</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <IdCardIcon size={18} className="text-blue-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="customerNic"
+                    name="customerNic"
+                    value={formData.customerNic}
+                    onChange={handleChange}
+                    className="bg-blue-800 border border-blue-700 text-white rounded-lg focus:ring-blue-400 focus:border-blue-400 block w-full pl-10 p-2.5"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-blue-300 mb-1" htmlFor="preferredPayment">Preferred Payment Method</label>
+                <select
+                  id="preferredPayment"
+                  name="preferredPayment"
+                  value={formData.preferredPayment}
+                  onChange={handleChange}
+                  className="bg-blue-800 border border-blue-700 text-white rounded-lg focus:ring-blue-400 focus:border-blue-400 block w-full p-2.5"
                 >
-                  <td className="py-4 text-sm font-semibold text-gray-900">
-                    {booking.id}
-                  </td>
-                  <td className="py-4 text-sm text-gray-700">{booking.date}</td>
-                  <td className="py-4 text-sm text-gray-700 max-w-[150px] truncate">
-                    {booking.from}
-                  </td>
-                  <td className="py-4 text-sm text-gray-700 max-w-[150px] truncate">
-                    {booking.to}
-                  </td>
-                  <td className="py-4 text-sm text-gray-700">
-                    {booking.driver}
-                  </td>
-                  <td className="py-4">
-                    <StatusBadge status={booking.status} />
-                  </td>
-                  <td className="py-4">
-                    {booking.rating ? (
-                      <div className="flex items-center gap-1">
-                        <StarIcon className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                        <span className="text-sm text-gray-700 font-medium">
-                          {booking.rating}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 text-sm">-</span>
-                    )}
-                  </td>
-                  <td className="py-4 text-right text-sm font-semibold text-gray-900">
-                    {booking.amount}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="PayPal">PayPal</option>
+                  <option value="Cash">Cash</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end mt-6 gap-3">
+            <button
+              type="button"
+              className="px-4 py-2 bg-blue-800 rounded-md text-blue-200 hover:bg-blue-700"
+              onClick={() => {
+                setFormData({ ...profile });
+                setIsEditing(false);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium flex items-center hover:bg-blue-700"
+            >
+              <SaveIcon size={18} className="mr-2" />
+              Save Changes
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };
 
-const StatusBadge = ({ status }) => {
-  let classes = "";
-  switch (status) {
-    case "COMPLETED":
-      classes = "bg-green-100 text-green-700 border-green-300 shadow-sm";
-      break;
-    case "IN_PROGRESS":
-      classes = "bg-yellow-100 text-yellow-700 border-yellow-300 shadow-sm";
-      break;
-    case "CANCELLED":
-      classes = "bg-gray-100 text-gray-700 border-gray-300 shadow-sm";
-      break;
-    default:
-      classes = "bg-gray-100 text-gray-700 border-gray-300 shadow-sm";
-  }
+// CustomerProfile
+const CustomerProfile = () => {
+  const [activeTab, setActiveTab] = useState('profile');
+  const [customerData, setCustomerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const fetchCustomerInfo = async () => {
+      if (!user?.userId) {
+        setLoading(false);
+        setCustomerData(null);
+        return;
+      }
+      try {
+        setLoading(true);
+        const data = await customerAPI.getCustomer(user.userId);
+        setCustomerData({
+          customerId: data.customerId,
+          customerName: data.customerName,
+        });
+      } catch (err) {
+        console.error('Error fetching customer info:', err.response?.data || err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomerInfo();
+  }, [user]);
+
   return (
-    <span
-      className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${classes}`}
-    >
-      {status}
-    </span>
+    <div className="w-full min-h-screen text-blue-950 bg-white">
+      <header className="border-b border-blue-900 p-4 bg-blue-900/50">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold">
+            <span className="text-white">MEGACITY</span>
+            <span className="text-blue-400"> CABS</span>
+          </h1>
+          {loading ? (
+            <div className="text-blue-300">Loading...</div>
+          ) : user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-blue-300">{customerData?.customerName || user.username}</span>
+              <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+                {(customerData?.customerName || user.username)?.split(' ').map(n => n[0]).join('')}
+              </div>
+              <button
+                onClick={logout}
+                className="px-3 py-1 bg-red-600/80 text-white rounded-md text-sm hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="text-blue-300">Not logged in</div>
+          )}
+        </div>
+      </header>
+      <main className="container mx-auto p-4">
+        {!user ? (
+          <div className="text-center">Please log in to view your profile.</div>
+        ) : (
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="md:w-1/4">
+              <div className="bg-blue-900/50 rounded-lg p-4">
+                <nav>
+                  <ul className="space-y-2">
+                    <li>
+                      <button
+                        className={`w-full text-left p-3 rounded-md flex items-center gap-3 ${activeTab === 'profile' ? 'bg-blue-600 text-white' : 'hover:bg-blue-800 text-blue-400'}`}
+                        onClick={() => setActiveTab('profile')}
+                      >
+                        <UserIcon size={20} />
+                        <span>Profile</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        className={`w-full text-left p-3 rounded-md flex items-center gap-3 ${activeTab === 'bookings' ? 'bg-blue-600 text-white' : 'hover:bg-blue-800 text-blue-400'}`}
+                        onClick={() => setActiveTab('bookings')}
+                      >
+                        <CalendarIcon size={20} />
+                        <span>My Bookings</span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+            <div className="md:w-3/4 bg-blue-900/50 rounded-lg p-6">
+              {activeTab === 'profile' && <ProfileSection />}
+              {activeTab === 'bookings' && <BookingsSection />}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 };
 

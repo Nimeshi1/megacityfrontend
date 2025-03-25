@@ -219,14 +219,7 @@ const HelpPage = () => {
           </div>
         </div>
 
-        {/* Contact Support */}
-        <div className="mt-16 text-center">
-          <h2 className="text-2xl font-bold mb-4">Still Need Help?</h2>
-          <p className="text-gray-600 mb-6">Our support team is available 24/7 to assist you</p>
-          <button className="bg-blue-950 text-white px-8 py-3 rounded-full hover:bg-yellow-600 transition">
-            Contact Support
-          </button>
-        </div>
+       
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+  BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
 
@@ -12,8 +12,8 @@ const AdminDashboard = () => {
     totalBookings: 18945
   };
   
-  // Line chart data - daily trend
-  const lineData = [
+  // Bar chart data - daily trend
+  const barData = [
     { day: 'Mar 1', value: 10000 },
     { day: 'Mar 3', value: 30000 },
     { day: 'Mar 5', value: 20000 },
@@ -23,15 +23,18 @@ const AdminDashboard = () => {
     { day: 'Mar 13', value: 39000 }
   ];
 
-  // Bar chart data - monthly data
-  const barData = [
-    { month: 'January', value: 4200 },
-    { month: 'February', value: 5300 },
-    { month: 'March', value: 6100 },
-    { month: 'April', value: 7500 },
-    { month: 'May', value: 9800 },
-    { month: 'June', value: 14800 }
+  // Pie chart data - monthly data
+  const pieData = [
+    { name: 'January', value: 4200 },
+    { name: 'February', value: 5300 },
+    { name: 'March', value: 6100 },
+    { name: 'April', value: 7500 },
+    { name: 'May', value: 9800 },
+    { name: 'June', value: 14800 }
   ];
+
+  // Colors for the pie chart segments
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -53,7 +56,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-yellow-500 text-white rounded-lg shadow p-4">
+        <div className="bg-pink-500 text-white rounded-lg shadow p-4">
           <div className="flex justify-between">
             <div>
               <p className="text-sm">Total Drivers</p>
@@ -67,7 +70,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-green-500 text-white rounded-lg shadow p-4">
+        <div className="bg-purple-500 text-white rounded-lg shadow p-4">
           <div className="flex justify-between">
             <div>
               <p className="text-sm">Total Bookings</p>
@@ -87,34 +90,38 @@ const AdminDashboard = () => {
         <div className="bg-white rounded-lg shadow p-4">
           <h2 className="text-lg font-semibold mb-4">Daily Booking Trend</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <BarChart data={barData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#3B82F6" 
-                activeDot={{ r: 8 }} 
-                strokeWidth={2}
-              />
-            </LineChart>
+              <Bar dataKey="value" fill="#3B82F6" />
+            </BarChart>
           </ResponsiveContainer>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <h2 className="text-lg font-semibold mb-4">Monthly Bookings</h2>
+          <h2 className="text-lg font-semibold mb-4">Monthly Booking Distribution</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={barData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
               <Tooltip />
               <Legend />
-              <Bar dataKey="value" fill="#3B82F6" />
-            </BarChart>
+            </PieChart>
           </ResponsiveContainer>
         </div>
       </div>

@@ -1,212 +1,89 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
-const Cabs = () => {
-  const [vehicles, setVehicles] = useState([]); // All vehicles fetched from the backend
-  const [filteredVehicles, setFilteredVehicles] = useState([]); // Vehicles filtered based on selections
-  const [availabilityFilter, setAvailabilityFilter] = useState('all'); // 'all', 'available', 'unavailable'
-  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all'); // 'all', 'suv', 'sedan', 'van', etc.
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu
+const Fleets = () => {
   const navigate = useNavigate();
+  const [cabs, setCabs] = useState([]);
+  const [filters, setFilters] = useState({
+    type: 'All',
+    availability: 'All'
+  });
+  const [filteredCabs, setFilteredCabs] = useState([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu toggle
 
+  // Fetch data from the backend
   useEffect(() => {
-    // Fetch data from the backend
-    axios.get('http://localhost:8080/all/viewCars')
-      .then(response => {
-        // Transform the data to match the frontend structure
-        const transformedData = response.data.map(car => ({
+    const fetchCabs = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/all/viewCars');
+        const data = await response.json();
+        
+        // Map backend data to frontend structure
+        const mappedCabs = data.map(car => ({
           id: car.carId,
-          name: `${car.carBrand} ${car.carModel}`,
-          year: new Date().getFullYear(), // You might want to add a year field to your Car model
-          image: car.carImgUrl,
-          passengers: car.capacity,
-          luggage: 2, // You might want to add a luggage field to your Car model
+          brand: car.carBrand,
+          model: car.carModel,
+          type: car.baseRate > 300 ? "Luxury" : "Economy", // Modified type classification
+          seats: car.capacity,
           available: car.available,
-          type: car.carModel.toLowerCase().includes('suv') ? 'suv' : 
-                car.carModel.toLowerCase().includes('van') ? 'van' : 
-                'sedan' // Example: Categorize vehicle types
+          image: car.carImgUrl || '/api/placeholder/300/200',
+          hourlyRate: car.baseRate > 300 ? 25 : 15 // Updated hourly rate based on new classification
         }));
-        setVehicles(transformedData);
-        setFilteredVehicles(transformedData); // Initialize filtered vehicles with all vehicles
-      })
-      .catch(error => {
-        console.error('There was an error fetching the car data!', error);
-      });
+
+        setCabs(mappedCabs);
+        setFilteredCabs(mappedCabs);
+      } catch (error) {
+        console.error('Error fetching cabs:', error);
+      }
+    };
+
+    fetchCabs();
   }, []);
 
-  useEffect(() => {
-    // Apply filters whenever availabilityFilter or vehicleTypeFilter changes
-    let filtered = vehicles;
-
-    // Filter by availability
-    if (availabilityFilter !== 'all') {
-      filtered = filtered.filter(vehicle => 
-        availabilityFilter === 'available' ? vehicle.available : !vehicle.available
-      );
-    }
-
-    // Filter by vehicle type
-    if (vehicleTypeFilter !== 'all') {
-      filtered = filtered.filter(vehicle => vehicle.type === vehicleTypeFilter);
-    }
-
-    setFilteredVehicles(filtered);
-  }, [availabilityFilter, vehicleTypeFilter, vehicles]);
-
-  const handleBooking = (vehicleName) => {
-    alert(`Thank you for booking a ${vehicleName}. A confirmation will be sent shortly.`);
+  // Handle filter changes
+  const handleFilterChange = (filterType, value) => {
+    setFilters({
+      ...filters,
+      [filterType]: value
+    });
   };
 
-  // SVG Icons as components
-  const CarIcon = () => (
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5H6.5C5.84 5 5.29 5.42 5.08 6.01L3 12V20C3 20.55 3.45 21 4 21H5C5.55 21 6 20.55 6 20V19H18V20C18 20.55 18.45 21 19 21H20C20.55 21 21 20.55 21 20V12L18.92 6.01ZM6.5 16C5.67 16 5 15.33 5 14.5S5.67 13 6.5 13C7.33 13 8 13.67 8 14.5S7.33 16 6.5 16ZM17.5 16C16.67 16 16 15.33 16 14.5S16.67 13 17.5 13C18.33 13 19 13.67 19 14.5S18.33 16 17.5 16ZM5 11L6.5 6.5H17.5L19 11H5Z" fill="#A0E337"/>
-    </svg>
-  );
+  // Apply filters whenever filters state changes
+  useEffect(() => {
+    let result = [...cabs];
+    
+    // Filter by car type
+    if (filters.type !== 'All') {
+      result = result.filter(cab => cab.type === filters.type);
+    }
+    
+    // Filter by availability
+    if (filters.availability !== 'All') {
+      const isAvailable = filters.availability === 'Available';
+      result = result.filter(cab => cab.available === isAvailable);
+    }
+    
+    setFilteredCabs(result);
+  }, [filters, cabs]);
 
-  const PassengerIcon = () => (
-    <svg className="spec-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16 11C17.66 11 18.99 9.66 18.99 8C18.99 6.34 17.66 5 16 5C14.34 5 13 6.34 13 8C13 9.66 14.34 11 16 11ZM8 11C9.66 11 10.99 9.66 10.99 8C10.99 6.34 9.66 5 8 5C6.34 5 5 6.34 5 8C5 9.66 6.34 11 8 11ZM8 13C5.67 13 1 14.17 1 16.5V19H15V16.5C15 14.17 10.33 13 8 13ZM16 13C15.71 13 15.38 13.02 15.03 13.05C16.19 13.89 17 15.02 17 16.5V19H23V16.5C23 14.17 18.33 13 16 13Z" fill="#A0E337"/>
-    </svg>
-  );
+  // Updated car types for filter dropdown (only Economy and Luxury)
+  const carTypes = ['All', 'Economy', 'Luxury'];
 
-  const LuggageIcon = () => (
-    <svg className="spec-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17 6H7C5.9 6 5 6.9 5 8V16C5 17.1 5.9 18 7 18H17C18.1 18 19 17.1 19 16V8C19 6.9 18.1 6 17 6ZM17 16H7V8H17V16Z" fill="#A0E337"/>
-      <path d="M9 9H15V15H9V9Z" fill="#A0E337"/>
-    </svg>
-  );
+  // Handle booking - Navigate to booking page with selected car
+  const handleBooking = (cab) => {
+    navigate('/booking', { state: { selectedCar: cab } });
+  };
 
-  // Styles as a JavaScript object
-  const styles = {
-    container: {
-      width: '100%',
-      margin: 0,
-      padding: '20px',
-      backgroundColor: '#F0F8FF', // Changed to a light blue color
-      color: '#121826', // Adjusted text color for better contrast
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      boxSizing: 'border-box',
-    },
-    appWrapper: {
-      margin: 0,
-      padding: 0,
-      minHeight: '100vh',
-      backgroundColor: '#121826',
-    },
-    header: {
-      textAlign: 'center',
-      padding: '40px 0',
-    },
-    logo: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '10px',
-      marginBottom: '15px',
-    },
-    logoText: {
-      color: '#a0e337',
-      fontSize: '2.5rem',
-      fontWeight: 'bold',
-    },
-    tagline: {
-      color: '#121826', // Adjusted text color for better contrast
-      fontSize: '1.2rem',
-      marginBottom: '30px',
-    },
-    filters: {
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '20px',
-      marginBottom: '30px',
-    },
-    filterSelect: {
-      padding: '10px',
-      borderRadius: '5px',
-      border: '1px solid #a0e337',
-      backgroundColor: '#FFFFFF', // Changed to white for better contrast
-      color: '#121826',
-      fontSize: '1rem',
-    },
-    fleetGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-      gap: '20px',
-    },
-    vehicleCard: {
-      borderRadius: '10px',
-      overflow: 'hidden',
-      backgroundColor: '#FFFFFF', // Changed to white for better contrast
-      transition: 'transform 0.3s',
-      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // Added a subtle shadow
-    },
-    vehicleImage: {
-      height: '200px',
-      width: '100%',
-      objectFit: 'cover',
-    },
-    vehicleDetails: {
-      padding: '20px',
-    },
-    vehicleName: {
-      fontSize: '1.4rem',
-      fontWeight: 'bold',
-      marginBottom: '5px',
-      color: '#121826', // Adjusted text color for better contrast
-    },
-    vehicleYear: {
-      color: '#666', // Adjusted text color for better contrast
-      marginBottom: '15px',
-    },
-    vehicleSpecs: {
-      display: 'flex',
-      gap: '20px',
-      marginBottom: '20px',
-    },
-    spec: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '5px',
-      color: '#666', // Adjusted text color for better contrast
-    },
-    bookButton: {
-      display: 'block',
-      width: '100%',
-      padding: '15px',
-      backgroundColor: '#a0e337',
-      color: '#121826',
-      border: 'none',
-      borderRadius: '5px',
-      fontSize: '1rem',
-      fontWeight: 'bold',
-      cursor: 'pointer',
-      transition: 'background-color 0.3s',
-    },
-    bookButtonDisabled: {
-      backgroundColor: '#555',
-      color: '#999',
-      cursor: 'not-allowed',
-    },
-    statusTag: {
-      display: 'inline-block',
-      padding: '5px 10px',
-      borderRadius: '4px',
-      fontSize: '0.8rem',
-      fontWeight: 'bold',
-      float: 'right',
-    },
-    available: {
-      backgroundColor: '#238636',
-    },
-    unavailable: {
-      backgroundColor: '#da3633',
-    },
+  // Scroll to the Cabs grid section
+  const scrollToCabsGrid = () => {
+    const cabsGridSection = document.getElementById('cabs-grid');
+    if (cabsGridSection) {
+      cabsGridSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
-    <div style={styles.appWrapper}>
+    <div className="min-h-screen bg-white">
       {/* Top Header */}
       <div className="bg-blue-900 text-white py-2">
         <div className="container mx-auto px-4 flex justify-between items-center">
@@ -217,7 +94,7 @@ const Cabs = () => {
           <div className="text-sm">Available 24/7</div>
         </div>
       </div>
-
+      
       {/* Main Navigation */}
       <nav className="bg-blue-100 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4">
@@ -226,22 +103,32 @@ const Cabs = () => {
             <div className="flex-shrink-0 font-bold text-xl text-blue-900">
               MEGA CITY CAB
             </div>
-
+            
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               <a href="/" className="text-blue-950 hover:text-blue-800">Home</a>
               <Link to="/about" className="text-blue-950 hover:text-blue-900">About Us</Link>
-              <Link to="/help" className="text-blue-950 hover:text-blue-900">Help</Link>
+              <a href="/help" className="text-blue-950 hover:text-blue-900">Help</a>
               <Link to="/drivers" className="text-blue-950 hover:text-blue-900">Driver</Link>
             </div>
-
-            {/* Desktop Login/Register */}
+            
+            {/* Desktop Login/Register with Profile Icon */}
             <div className="hidden md:flex items-center space-x-4">
-              <Link to="/login" className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
-                Login
-              </Link>
+              <div className="flex items-center">
+                <Link to="/customerprofile" className="cursor-pointer">
+                  <div className="w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                </Link>
+                <Link to="/login" className="px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
+                  Login
+                </Link>
+              </div>
             </div>
-
+            
             {/* Mobile Menu Button */}
             <div className="md:hidden">
               <button
@@ -252,118 +139,145 @@ const Cabs = () => {
               </button>
             </div>
           </div>
-
+          
           {/* Mobile Menu */}
           {isMenuOpen && (
             <div className="md:hidden py-4">
               <div className="flex flex-col space-y-4">
                 <a href="/" className="text-gray-700 hover:text-blue-900">Home</a>
                 <a href="/about" className="text-gray-700 hover:text-blue-900">About Us</a>
-                <a href="/help" className="text-gray-700 hover:text-yellow-500">Help</a>
-                <a href="/drivers" className="text-gray-700 hover:text-yellow-500">Driver</a>
-                <button 
-                  onClick={() => navigate('/login')} 
-                  className="bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
-                  Login
-                </button>
+                <a href="/help" className="text-blue-950 hover:text-blue-900">Help</a>
+                <a href="/about" className="text-gray-700 hover:text-yellow-500">Driver</a>
+                
+                {/* Mobile Login with Profile Icon */}
+                <div className="flex items-center">
+                  <Link to="/customerprofile" className="cursor-pointer">
+                    <div className="w-6 h-6 rounded-full bg-blue-800 flex items-center justify-center text-white mr-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
+                  >
+                    Login
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </div>
       </nav>
 
-      {/* Fleet Page Content */}
-      <div style={styles.container}>
-        <header style={styles.header}>
-          <div style={styles.logo}>
-            <CarIcon />
-            <span style={styles.logoText}>CABS</span>
+      {/* Main content */}
+      <div className="bg-white">
+      <div className="bg-blue-900 p-12 rounded-lg shadow-xl max-w-2xl mx-auto"> {/* Increased padding and max width */}
+  <div className="flex flex-col justify-center items-center text-center">
+    <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">Our Vehicles</h1> {/* Larger heading */}
+    <p className="text-xl text-white mb-4">Providing safe and reliable transportation services since 2010</p>
+    <p className="text-xl text-white">Your Trusted Ride Partner</p>
+  </div>
+</div>
+        {/* Hero Header Section */}
+        <div className="bg-blue-950 relative overflow-hidden">
+       
+          {/* Wave SVG at the bottom of the header */}
+          <div className="absolute bottom-0 left-0 right-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" className="w-full">
+              <path fill="#FFFFFF" fillOpacity="1" d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,42.7C1120,32,1280,32,1360,32L1440,32L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"></path>
+            </svg>
           </div>
-          <p style={styles.tagline}>Choose from our premium fleet of vehicles</p>
-        </header>
-
-        {/* Filters Section */}
-        <div style={styles.filters}>
-          <select
-            style={styles.filterSelect}
-            value={availabilityFilter}
-            onChange={(e) => setAvailabilityFilter(e.target.value)}
-          >
-            <option value="all">All Availability</option>
-            <option value="available">Available</option>
-            <option value="unavailable">Unavailable</option>
-          </select>
-
-          <select
-            style={styles.filterSelect}
-            value={vehicleTypeFilter}
-            onChange={(e) => setVehicleTypeFilter(e.target.value)}
-          >
-            <option value="all">All Types</option>
-            <option value="suv">SUV</option>
-            <option value="sedan">Sedan</option>
-            <option value="van">Van</option>
-          </select>
         </div>
-
-        {/* Vehicle List */}
-        <div style={styles.fleetGrid}>
-          {filteredVehicles.map((vehicle) => (
-            <div key={vehicle.id} style={styles.vehicleCard}>
-              <img 
-                src={vehicle.image} 
-                alt={vehicle.name} 
-                style={styles.vehicleImage}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://via.placeholder.com/400x300?text=Vehicle+Image";
-                }}
-              />
-              <div style={styles.vehicleDetails}>
-                <div>
-                  <span 
-                    style={{
-                      ...styles.statusTag,
-                      ...(vehicle.available ? styles.available : styles.unavailable),
-                    }}
-                  >
-                    {vehicle.available ? 'Available' : 'Unavailable'}
-                  </span>
-                  <h2 style={styles.vehicleName}>{vehicle.name}</h2>
-                  <p style={styles.vehicleYear}>{vehicle.year}</p>
-                </div>
-                <div style={styles.vehicleSpecs}>
-                  <div style={styles.spec}>
-                    <PassengerIcon />
-                    <span>{vehicle.passengers} Passengers</span>
-                  </div>
-                  <div style={styles.spec}>
-                    <LuggageIcon />
-                    <span>{vehicle.luggage} Luggage</span>
+        
+        {/* Main content */}
+        <div className="container mx-auto px-4 py-12">
+          {/* New Modern Curved Filter Section */}
+          <div className="relative mb-20 max-w-3xl mx-auto">
+            {/* Content */}
+            <div className="relative z-10 px-8 py-10">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-lg font-bold text-blue-950">Availability</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full p-4 bg-white text-blue-950 border-none rounded-xl shadow-md appearance-none focus:ring-2 focus:ring-blue-950 transition-all"
+                      value={filters.availability}
+                      onChange={(e) => handleFilterChange('availability', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      <option value="Available">Available</option>
+                      <option value="Unavailable">Unavailable</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                      <svg className="h-5 w-5 text-blue-950" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-                <button 
-                  style={{
-                    ...styles.bookButton,
-                    ...(vehicle.available ? {} : styles.bookButtonDisabled),
-                  }}
-                  onClick={() => vehicle.available && handleBooking(vehicle.name)}
-                  disabled={!vehicle.available}
-                >
-                  Book Now
-                </button>
               </div>
             </div>
-          ))}
+          </div>
+          
+          {/* Cabs grid */}
+          <div id="cabs-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredCabs.length > 0 ? (
+              filteredCabs.map(cab => (
+                <div key={cab.id} className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 border border-gray-100">
+                  <div className="relative">
+                    <img 
+                      src={cab.image} 
+                      alt={`${cab.brand} ${cab.model}`} 
+                      className="w-full h-56 object-cover"
+                    />
+                    <div className="absolute top-4 right-4">
+                      <span className={`px-4 py-1 rounded-full text-sm font-medium ${cab.available ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                        {cab.available ? "Available" : "Unavailable"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-xl mb-2 text-blue-950">{cab.brand} {cab.model}</h3>
+                    <div className="text-gray-600 mb-6 space-y-1">
+                      
+                      <p className="flex items-center">
+                        <span className="w-24 font-medium">Capacity:</span> 
+                        <span>{cab.seats}</span>
+                      </p>
+                    </div>
+                    {cab.available ? (
+                      <button 
+                        className="w-full bg-blue-950 text-white py-3 rounded-lg hover:bg-blue-900 transition shadow-md"
+                        onClick={() => handleBooking(cab)}
+                      >
+                        Book Now
+                      </button>
+                    ) : (
+                      <button 
+                        className="w-full bg-gray-300 text-gray-500 py-3 rounded-lg cursor-not-allowed"
+                        disabled
+                      >
+                        Unavailable
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-gray-100">
+                <p className="text-xl font-medium mb-2">No matching vehicles found</p>
+                <p>Try adjusting your filter options to see more vehicles.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#121826', color: 'white', textAlign: 'center', padding: '20px' }}>
-        <p>© 2023 Mega City Cab. All rights reserved.</p>
-      </footer>
     </div>
   );
 };
 
-export default Cabs;
+export default Fleets;

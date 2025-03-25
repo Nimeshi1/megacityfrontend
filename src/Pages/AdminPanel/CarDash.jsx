@@ -177,7 +177,7 @@ const CarDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-800">Car Management</h1>
           <button
             onClick={handleAddNew}
-            className="bg-lime-600 text-white px-4 py-2 rounded-lg hover:bg-lime-700 disabled:bg-lime-400"
+            className="bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-lime-700 disabled:bg-lime-400"
             disabled={loading}
           >
             Add New Car
@@ -293,7 +293,7 @@ const CarDashboard = () => {
               <div className="mt-8 flex justify-end gap-4">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-lime-600 text-white rounded-lg hover:bg-lime-700 disabled:bg-lime-400"
+                  className="px-4 py-2 bg-blue-950 text-white rounded-lg hover:bg-lime-700 disabled:bg-lime-400"
                   disabled={loading}
                 >
                   {loading ? 'Processing...' : isEditing ? 'Update Car' : 'Add Car'}
@@ -301,7 +301,7 @@ const CarDashboard = () => {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 bg-white text-lime-600 border border-lime-500 rounded-lg hover:bg-lime-50 disabled:bg-gray-200"
+                  className="px-4 py-2 bg-white text-blue-950 border border-lime-500 rounded-lg hover:bg-lime-50 disabled:bg-gray-200"
                   disabled={loading}
                 >
                   Cancel
@@ -384,7 +384,7 @@ const CarDashboard = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => handleEdit(car)}
-                            className="text-lime-600 hover:text-lime-800 mr-4 disabled:text-gray-400"
+                            className="text-blue-900 hover:text-lime-800 mr-4 disabled:text-gray-400"
                             disabled={loading}
                           >
                             Edit

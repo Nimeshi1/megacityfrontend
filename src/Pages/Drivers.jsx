@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Lock, Phone, Mail, ArrowRight, ChevronLeft, Shield, MapPin } from "lucide-react";
+import { User, Lock, Phone, Mail, ArrowRight, ChevronLeft, MapPin, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 
 const ModernCarLogo = () => (
@@ -33,18 +33,19 @@ const SignUpPage = () => {
     email: "",
     password: "",
     address: "",
+    driverLicenseNo: "",
+    hasOwnCar: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -62,28 +63,27 @@ const SignUpPage = () => {
     setError("");
 
     try {
-      const customerData = {
-        driverName: formData.fullName,
-        driverAddress: formData.address,
-        driverPhone: formData.phone,
-        email: formData.email,
-        password: formData.password,
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append("driverName", formData.fullName);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("driverPhoneNum", formData.phone);
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append("driverAddress", formData.address);
+      formDataToSend.append("driverLicenseNo", formData.driverLicenseNo);
+      formDataToSend.append("hasOwnCar", formData.hasOwnCar.toString());
 
-      const response = await fetch("http://localhost:8080/auth/drivers/createDriver", {
+      const response = await fetch("http://localhost:8080/auth/driver/createdriver", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(customerData),
+        body: formDataToSend,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create customer");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create driver");
       }
 
       const result = await response.json();
-      console.log("Customer created successfully:", result);
+      console.log("Driver created successfully:", result);
 
       setFormData({
         fullName: "",
@@ -91,12 +91,15 @@ const SignUpPage = () => {
         email: "",
         password: "",
         address: "",
+        driverLicenseNo: "",
+        hasOwnCar: false,
       });
 
-      alert("Customer created successfully!");
+      alert("Driver created successfully!");
+      navigate("/login");
     } catch (error) {
-      console.error("Error creating customer:", error);
-      setError("Failed to create customer. Please try again.");
+      console.error("Error creating driver:", error);
+      setError(error.message || "Failed to create driver. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +107,6 @@ const SignUpPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top Header */}
       <div className="bg-blue-900 text-white py-2">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center">
@@ -115,11 +117,7 @@ const SignUpPage = () => {
         </div>
       </div>
 
-     
-
-      {/* Sign Up Container */}
       <div className="relative min-h-screen flex items-center justify-center py-12">
-        {/* Background with Overlay */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-blue-950/50" />
           <div className="absolute inset-0 bg-gradient-to-t from-blue-900 via-gray-900/70 to-transparent" />
@@ -129,7 +127,6 @@ const SignUpPage = () => {
           </div>
         </div>
 
-        {/* Logo at Top Left */}
         <div className="absolute top-8 left-8">
           <h1 className="text-2xl font-bold">
             <span className="text-white">MEGACITY</span>
@@ -138,7 +135,6 @@ const SignUpPage = () => {
           </h1>
         </div>
 
-        {/* Sign Up Container */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -146,13 +142,11 @@ const SignUpPage = () => {
           className="relative w-full max-w-md mx-auto px-8 py-10 bg-blue-900/40 backdrop-blur-lg rounded-2xl border border-gray-700/50 shadow-xl"
         >
           <div className="space-y-6">
-            {/* Sign Up Header */}
             <div className="text-center space-y-2">
               <h2 className="text-3xl font-bold text-white">Create Your Account</h2>
               <p className="text-gray-400">Join MegaCity Cabs for premium rides</p>
             </div>
 
-            {/* Sign Up Form */}
             <form className="space-y-5" onSubmit={handleSubmit}>
               {error && (
                 <div className="bg-red-900/50 text-red-200 p-2 rounded text-sm text-center">
@@ -160,7 +154,6 @@ const SignUpPage = () => {
                 </div>
               )}
 
-              {/* Full Name Field */}
               <div className="space-y-1">
                 <label htmlFor="fullName" className="block text-white font-medium">
                   Full Name
@@ -182,7 +175,6 @@ const SignUpPage = () => {
                 </div>
               </div>
 
-              {/* Phone Number Field */}
               <div className="space-y-1">
                 <label htmlFor="phone" className="block text-white font-medium">
                   Phone Number
@@ -204,7 +196,6 @@ const SignUpPage = () => {
                 </div>
               </div>
 
-              {/* Email Field */}
               <div className="space-y-1">
                 <label htmlFor="email" className="block text-white font-medium">
                   Email Address
@@ -226,7 +217,6 @@ const SignUpPage = () => {
                 </div>
               </div>
 
-              {/* Address Field */}
               <div className="space-y-1">
                 <label htmlFor="address" className="block text-white font-medium">
                   Address
@@ -248,7 +238,27 @@ const SignUpPage = () => {
                 </div>
               </div>
 
-              {/* Password Field */}
+              <div className="space-y-1">
+                <label htmlFor="driverLicenseNo" className="block text-white font-medium">
+                  Driver License Number
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FileText className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="driverLicenseNo"
+                    name="driverLicenseNo"
+                    type="text"
+                    value={formData.driverLicenseNo}
+                    onChange={handleChange}
+                    required
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-transparent"
+                    placeholder="DL1234567"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label htmlFor="password" className="block text-white font-medium">
                   Password
@@ -271,7 +281,20 @@ const SignUpPage = () => {
                 </div>
               </div>
 
-              {/* Terms and Conditions Checkbox */}
+              <div className="flex items-center">
+                <input
+                  id="hasOwnCar"
+                  name="hasOwnCar"
+                  type="checkbox"
+                  checked={formData.hasOwnCar}
+                  onChange={handleChange}
+                  className="h-4 w-4 bg-gray-900 border-gray-700 rounded text-lime-400 focus:ring-lime-400"
+                />
+                <label htmlFor="hasOwnCar" className="ml-3 text-sm text-gray-400">
+                  I have my own car
+                </label>
+              </div>
+
               <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input
@@ -298,7 +321,6 @@ const SignUpPage = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div>
                 <motion.button
                   type="submit"
@@ -338,7 +360,6 @@ const SignUpPage = () => {
               </div>
             </form>
 
-            {/* Login Link */}
             <div className="text-center">
               <p className="text-gray-400">
                 Already have an account?{" "}
@@ -352,7 +373,6 @@ const SignUpPage = () => {
               </p>
             </div>
 
-            {/* Back to Home */}
             <motion.a
               href="/"
               whileHover={{ x: -3 }}

@@ -1,42 +1,96 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../../Util/AuthContext'; // Adjust the import path based on your file structure
 
 const AdminCustomersPage = () => {
   const [customersData, setCustomersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-  // Base URL for the API - adjust this according to your backend deployment
+  const { user, logout } = useAuth(); // Get user and logout from AuthContext
   const API_BASE_URL = 'http://localhost:8080/auth/customers';
 
   // Fetch all customers when component mounts
   useEffect(() => {
     const fetchCustomers = async () => {
+      if (!user) {
+        setError('Please log in to view customers');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(`${API_BASE_URL}/viewCustomers`);
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+          setError('Authentication token not found');
+          setLoading(false);
+          logout();
+          return;
+        }
+
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        const response = await axios.get(`${API_BASE_URL}/viewCustomers`, config);
         setCustomersData(response.data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch customers');
+        if (err.response?.status === 401) {
+          setError('Session expired. Please log in again.');
+          logout();
+        } else {
+          setError('Failed to fetch customers');
+        }
         setLoading(false);
+        console.error(err);
       }
     };
 
     fetchCustomers();
-  }, []);
+  }, [user, logout]);
 
   const handleViewClick = async (customerId) => {
+    if (!user) {
+      setError('Please log in to view customer details');
+      return;
+    }
+
     try {
-      // Fetch individual customer details
-      const response = await axios.get(`${API_BASE_URL}/getcustomer/${customerId}`);
-      console.log('Customer details:', response.data);
-      // In a real app, you could:
-      // 1. Navigate to a details page: history.push(`/customers/${customerId}`)
-      // 2. Open a modal with customer details
-      // 3. Store in state to display additional details
+      const token = localStorage.getItem('jwtToken');
+      if (!token) {
+        setError('Authentication token not found');
+        logout();
+        return;
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      // Updated endpoint to match backend
+      const response = await axios.get(`${API_BASE_URL}/${customerId}`, config);
+      setSelectedCustomer(response.data);
     } catch (err) {
       console.error('Error fetching customer:', err);
+      if (err.response?.status === 401) {
+        setError('Session expired. Please log in again.');
+        logout();
+      } else if (err.response?.status === 404) {
+        setError(`Customer with ID ${customerId} not found`);
+      } else {
+        setError('Failed to fetch customer details');
+      }
     }
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedCustomer(null);
   };
 
   if (loading) {
@@ -66,22 +120,22 @@ const AdminCustomersPage = () => {
             <thead>
               <tr className="bg-gray-700 text-gray-400">
                 <th className="p-4">ID</th>
-                <th className="p-4">customerName</th>
+                <th className="p-4">Customer Name</th>
                 <th className="p-4">Email</th>
-                <th className="p-4">customerPhone</th>
+                <th className="p-4">Phone</th>
                 <th className="p-4">Actions</th>
               </tr>
             </thead>
             <tbody>
               {customersData.map((customer) => (
-                <tr key={customer.id} className="border-t border-gray-700 text-white">
+                <tr key={customer.customerId} className="border-t border-gray-700 text-white">
                   <td className="p-4">{customer.customerId}</td>
-                  <td className="p-4">{customer.customername}</td>
+                  <td className="p-4">{customer.customerName}</td>
                   <td className="p-4">{customer.email}</td>
-                  <td className="p-4">{customer.custometphone}</td>
+                  <td className="p-4">{customer.customerPhone}</td>
                   <td className="p-4">
                     <button
-                      onClick={() => handleViewClick(customer.id)}
+                      onClick={() => handleViewClick(customer.customerId)}
                       className="bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition-colors"
                     >
                       View
@@ -92,6 +146,33 @@ const AdminCustomersPage = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Display selected customer details */}
+        {selectedCustomer && (
+          <div className="mt-6 bg-[#071013] rounded-lg shadow-lg p-6 text-white">
+            <h3 className="text-xl font-bold mb-4">Customer Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p><strong>ID:</strong> {selectedCustomer.customerId}</p>
+                <p><strong>Name:</strong> {selectedCustomer.customerName}</p>
+                <p><strong>Email:</strong> {selectedCustomer.email}</p>
+                <p><strong>Phone:</strong> {selectedCustomer.customerPhone}</p>
+              </div>
+              <div>
+                <p><strong>Address:</strong> {selectedCustomer.customerAddress || 'N/A'}</p>
+                <p><strong>NIC:</strong> {selectedCustomer.customerNic || 'N/A'}</p>
+                <p><strong>Member Since:</strong> {selectedCustomer.memberSince || 'N/A'}</p>
+                <p><strong>Preferred Payment:</strong> {selectedCustomer.preferredPayment || 'N/A'}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleCloseDetails}
+              className="mt-4 bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
